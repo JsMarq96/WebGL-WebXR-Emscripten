@@ -16,29 +16,36 @@
             }
         </style>
 
-    <!-- <script src="https://cdn.jsdelivr.net/gh/brendan-duncan/webgpu_recorder/webgpu_recorder.js"></script>
- -->        <div class="emscripten_border">
-    <script>
-        //var spector = new SPECTOR.Spector();
-        //spector.displayUI();
-    /*new WebGPURecorder({
-        "frames": 10,
-        "export": "WebGPURecord",
-        "width": 400,
-        "height": 400
-    });*/
-</script>
-      <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
-    </div> 
+        <!-- <script src="https://cdn.jsdelivr.net/gh/brendan-duncan/webgpu_recorder/webgpu_recorder.js"></script>
+          -->
+        <div class="emscripten_border">
+            <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
+        </div>
 
-    <!-- {{{ SCRIPT }}} -->
- 
-    <script async type="text/javascript" src="MIX_WEBXR.js">   </script>
-    </script>
+        <!-- {{{ SCRIPT }}} -->
+
+         <script>
+                //var spector = new SPECTOR.Spector();
+                //spector.displayUI();
+                /*new WebGPURecorder({
+                  "frames": 10,
+                  "export": "WebGPURecord",
+                  "width": 400,
+                  "height": 400
+                  });*/
+                const canvas = document.querySelector("canvas");
+
+             const resize = () => {
+                 canvas.width = window.innerWidth;
+                 canvas.height = window.innerHeight;
+             };
+
+             resize();
+             window.addEventListener('resize', resize);
+            </script>
+
+        <script async type="text/javascript" src="MIX_WEBXR.js">   </script>
 
 
 	</body>
-    <script> 
- </script>
-
 </html>

@@ -20,7 +20,12 @@
 Render::sInstance renderer;
 
 void render_frame() {
-    renderer.render_frame(glm::mat4x4(1.0f));
+    glm::mat4x4 persp;
+    glm::mat4x4 view_mat = glm::lookAt(glm::vec3{2.0f, 3.0f, 1.0f},
+                                       glm::vec3{0.0f, 0.0f ,0.0f},
+                                       glm::vec3{0.0f, 1.0f, 0.0f});
+
+    renderer.render_frame(view_mat);
 }
 
 

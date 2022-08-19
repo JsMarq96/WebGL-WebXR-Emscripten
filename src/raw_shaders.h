@@ -9,8 +9,10 @@ in  vec3 a_pos;
 in  vec2 a_uv;
 in vec3 a_normal;
 
+uniform mat4 u_vp_mat;
+
 void main() {
-    gl_Position = vec4(a_pos, 1.0);
+    gl_Position = u_vp_mat * vec4(a_pos, 1.0);
 }
 )";
 
