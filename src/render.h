@@ -1,12 +1,6 @@
 #ifndef RENDER_H_
 #define RENDER_H_
 
-#include <webgl/webgl2.h>
-#include <emscripten/html5_webgl.h>
-
-#include <glm/vec3.hpp>
-#include <glm/gtc/quaternion.hpp>
-
 #include "transform.h"
 #include "shader.h"
 
@@ -24,6 +18,10 @@
  *  4) GLTF import
  *  5) Culling (VR culling??)
  *  5) Render graph..?
+ *
+ *  Try an "stateless" API?
+ *  Keep on instance state of the OpenGL flags
+ *  Set this flags on each drawcall, and change when necesary
  * */
 namespace Render {
 
@@ -37,23 +35,29 @@ namespace Render {
     struct sMeshBuffers {
         uint32_t VAO;
         uint32_t VBO;
-        uint32_t UBO;
+        uint32_t EBO;
 
         uint32_t primitive_count;
         uint32_t primitive;
 
         bool is_indexed = false;
+
+        void init_with_triangles(const float *geometry,
+                                 const uint32_t geometry_size,
+                                 const uint16_t *indices,
+                                 const uint32_t indices_size);
     };
     
     struct sInstance {
+        uint16_t shader_count = 0;
         sShader shaders[SHADER_TOTAL_COUNT];
+        uint16_t meshes_count = 0;
         sMeshBuffers meshes[MESH_TOTAL_COUNT];
 
         uint16_t draw_stack_size = 0;
         sDrawCall draw_stack[DRAW_CALL_STACK_SIZE];
 
         void render_frame(const glm::mat4x4 &view_proj_mat);
-
     };
 
 };

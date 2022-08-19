@@ -6,6 +6,49 @@
 #include <emscripten/html5.h>
 #include <webgl/webgl2.h>
 
+void Render::sMeshBuffers::init_with_triangles(const float *geometry,
+                                               const uint32_t geometry_size,
+                                               const uint16_t *indices,
+                                               const uint32_t indices_size) {
+    glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, geometry_size, geometry, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_size, indices, GL_STATIC_DRAW);
+
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+
+    // Load vertices
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+    // Vertex position
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*) 0);
+
+    // UV coords
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*) (sizeof(float) * 3));
+
+    // Vertex normal
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*) (sizeof(float) * 5));
+
+    // Load vertex indexing
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    glBindVertexArray(0);
+
+    primitive = GL_TRIANGLES;
+    primitive_count = (uint16_t) (indices_size / sizeof(uint16_t));
+    is_indexed = true;
+}
+
 
 void Render::sInstance::render_frame(const glm::mat4x4 &view_proj_frame) {
     int width, height, lef, right;
@@ -27,14 +70,16 @@ void Render::sInstance::render_frame(const glm::mat4x4 &view_proj_frame) {
 
         glBindVertexArray(mesh.VAO);
 
-        shader.set_uniform_matrix4("u_model_mat", model);
-        shader.set_uniform_matrix4("u_vp_mat", view_proj_frame);
+        //shader.set_uniform_matrix4("u_model_mat", model);
+        //shader.set_uniform_matrix4("u_vp_mat", view_proj_frame);
 
         if (mesh.is_indexed) {
-
+            glDrawElements(mesh.primitive, mesh.primitive_count, GL_UNSIGNED_SHORT, 0);
         } else {
             glDrawArrays(mesh.primitive, 0, mesh.primitive_count);
         }
+
+        shader.deactivate();
     }
     //glUseProgram(shader_program);
     //glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
