@@ -54,21 +54,13 @@ void Render::sMeshBuffers::init_with_triangles(const float *geometry,
 
 
 #include <iostream>
-void Render::sInstance::render_frame(const glm::mat4x4 &view_mat) {
-    int width, height, lef, right;
-    emscripten_get_canvas_element_size("#canvas", &width, &height);
+void Render::sInstance::render_frame(const glm::mat4x4 &view_proj_mat) {
 
-    std::cout << width << " " << height << std::endl;
+   // std::cout << width << " " << height << std::endl;
 
-    glViewport(0, 0, width, height);
-    glClearColor(0.0, 0.0, 0.0, 1.0);
+        glClearColor(0.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glm::mat4x4 view_proj_mat = glm::perspective(glm::radians(90.0f),
-                                                 (float) ((float) width / height),
-                                                 0.1f,
-                                                 10000.0f) * view_mat;
-    //view_proj_mat = view_mat * view_proj_mat;
 
     glm::mat4x4 model;
     for(uint16_t i = 0; i < draw_stack_size; i++) {
@@ -93,7 +85,4 @@ void Render::sInstance::render_frame(const glm::mat4x4 &view_mat) {
 
         shader.deactivate();
     }
-    //glUseProgram(shader_program);
-    //glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-
 }

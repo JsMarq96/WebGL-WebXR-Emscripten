@@ -20,12 +20,22 @@
 Render::sInstance renderer;
 
 void render_frame() {
+    int width, height, lef, right;
+    emscripten_get_canvas_element_size("#canvas", &width, &height);
+
     glm::mat4x4 persp;
-    glm::mat4x4 view_mat = glm::lookAt(glm::vec3{2.0f, 3.0f, 1.0f},
+    glm::mat4x4 view_mat = glm::lookAt(glm::vec3{2.0f, 0.50f, 2.0f},
                                        glm::vec3{0.0f, 0.0f ,0.0f},
                                        glm::vec3{0.0f, 1.0f, 0.0f});
 
-    renderer.render_frame(view_mat);
+    glm::mat4x4 view_proj_mat = glm::perspective(glm::radians(90.0f),
+                                                 (float) ((float) width / height),
+                                                 0.1f,
+                                                 10000.0f) * view_mat;
+
+    glViewport(0, 0, width, height);
+
+    renderer.render_frame(view_proj_mat);
 }
 
 
