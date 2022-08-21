@@ -24,4 +24,8 @@ target_link_libraries(MIX_WEBXR glm)
 message(STATUS "Exporting with WASM")
 
 set(CMAKE_EXECUTABLE_SUFFIX ".html")
-set_target_properties(MIX_WEBXR PROPERTIES LINK_FLAGS "-s WASM=1 -s USE_WEBGL2=1 -s FULL_ES3=1 -s USE_GLFW=3 -s STRICT=1 -lGL -lglfw --shell-file ../web/page.html")
+set_target_properties(MIX_WEBXR PROPERTIES LINK_FLAGS "-s ALLOW_MEMORY_GROWTH=1 -s WASM=1 -s USE_WEBGL2=1 -s FULL_ES3=1 -s USE_GLFW=3 -s STRICT=1 -lGL -lglfw --shell-file ../web/page.html --preload-file resources@/ --use-preload-plugins")
+
+add_custom_command(TARGET MIX_WEBXR PRE_BUILD
+                   COMMAND ${CMAKE_COMMAND} -E copy_directory
+                       ${CMAKE_SOURCE_DIR}/resources $<TARGET_FILE_DIR:MIX_WEBXR>/resources)

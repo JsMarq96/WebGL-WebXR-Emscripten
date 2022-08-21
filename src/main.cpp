@@ -55,20 +55,26 @@ int main() {
     assert(strstr(extensions, "WEBGL") != 0);
     free(extensions);
 
+    const uint8_t cube_mesh_id = 0;
     renderer.meshes[0].init_with_triangles(RawMesh::cube_geometry,
                                            sizeof(RawMesh::cube_geometry),
                                            RawMesh::cube_indices,
                                            sizeof(RawMesh::cube_indices));
     renderer.meshes_count++;
 
+    const uint8_t basic_material_id = 0, volume_material = 1;
+    renderer.materials[0].add_raw_shader(RawShaders::basic_vertex,
+                                         RawShaders::basic_fragment);
+    renderer.material_count += 2;
 
-    renderer.shaders[0].load_shaders(RawShaders::basic_vertex,
-                                     RawShaders::basic_fragment);
-    renderer.shader_count++;
+    renderer.materials[volume_material].add_volume_texture("/volumes/teapot_16_16.png",
+                                                           16,
+                                                           16,
+                                                           16);
 
     renderer.draw_stack[0] = {
-        .mesh_id = 0,
-        .shader_id = 0
+        .mesh_id = cube_mesh_id,
+        .material_id = basic_material_id
     };
 
     renderer.draw_stack_size++;

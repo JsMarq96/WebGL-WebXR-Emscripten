@@ -55,22 +55,20 @@ void Render::sMeshBuffers::init_with_triangles(const float *geometry,
 
 #include <iostream>
 void Render::sInstance::render_frame(const glm::mat4x4 &view_proj_mat) {
-
-   // std::cout << width << " " << height << std::endl;
-
-        glClearColor(0.0, 0.0, 0.0, 1.0);
+    glClearColor(0.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
     glm::mat4x4 model;
     for(uint16_t i = 0; i < draw_stack_size; i++) {
         sDrawCall &draw_call = draw_stack[i];
-        sShader &shader = shaders[draw_call.shader_id];
+        sMaterial &material = materials[draw_call.material_id];
+        sShader &shader = material.shader;
         sMeshBuffers &mesh = meshes[draw_call.mesh_id];
 
         model = draw_call.transform.get_model();
 
-        shader.activate();
+        material.enable();
 
         glBindVertexArray(mesh.VAO);
 
@@ -83,6 +81,6 @@ void Render::sInstance::render_frame(const glm::mat4x4 &view_proj_mat) {
             glDrawArrays(mesh.primitive, 0, mesh.primitive_count);
         }
 
-        shader.deactivate();
+        material.disable();
     }
 }

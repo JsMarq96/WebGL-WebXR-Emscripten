@@ -3,9 +3,11 @@
 
 #include "transform.h"
 #include "shader.h"
+#include "material.h"
 
 #define SHADER_TOTAL_COUNT 10
 #define MESH_TOTAL_COUNT 20
+#define MATERIAL_TOTAL_COUNT 30
 #define DRAW_CALL_STACK_SIZE 30
 /**
  * A Wrapper for the rendering backend, for now with webgl
@@ -29,7 +31,7 @@ namespace Render {
     struct sDrawCall {
         sTransform transform;
         uint8_t mesh_id;
-        uint8_t shader_id;
+        uint8_t material_id;
     };
 
     struct sMeshBuffers {
@@ -49,8 +51,8 @@ namespace Render {
     };
     
     struct sInstance {
-        uint16_t shader_count = 0;
-        sShader shaders[SHADER_TOTAL_COUNT];
+        uint16_t material_count = 0;
+        sMaterial materials[MATERIAL_TOTAL_COUNT];
         uint16_t meshes_count = 0;
         sMeshBuffers meshes[MESH_TOTAL_COUNT];
 
