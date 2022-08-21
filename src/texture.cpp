@@ -30,7 +30,7 @@ void sTexture::load(const eTextureType text_type,
         // Generate buffer based on teh biggest possible size, the bottom terminating png
         char *name_buffer = (char*) malloc(strlen(texture_name) + sizeof("bottom.png") + 1);
 
-        unsigned char* raw_data = NULL;
+        char* raw_data = NULL;
         for(int i = 0; i < 6; i++) {
             int w, h, l;
             memset(name_buffer, '\0', strlen(texture_name) + sizeof("bottom.png") + 1);
@@ -132,7 +132,7 @@ void sTexture::load3D(const char* texture_name,
                       const uint16_t depth_i) {
     store_on_RAM = false;
     type = VOLUME;
-    int w, h, l;
+    int w = 0, h = 0, l = 0;
     //text->raw_data = stbi_load(texture_name, &w, &h, &l, 0);
 
 #ifndef __EMSCRIPTEN__
