@@ -53,6 +53,60 @@ void Render::sMeshBuffers::init_with_triangles(const float *geometry,
 }
 
 
+void Render::sInstance::init() {
+    // Set default
+    glEnable(GL_DEPTH_TEST);
+    glDepthMask(current_state.write_to_depth_buffer);
+    glDepthFunc(current_state.depth_function);
+
+    glEnable(GL_CULL_FACE);
+    glCullFace(current_state.culling_mode);
+    glFrontFace(current_state.front_face);
+}
+
+void Render::sInstance::change_graphic_state(const sGLState &new_state) {
+    // Depth
+    if (current_state.depth_test_enabled != new_state.depth_test_enabled) {
+        if (new_state.depth_test_enabled) {
+            glEnable(GL_DEPTH_TEST);
+        } else {
+            glDisable(GL_DEPTH_TEST);
+        }
+       current_state.depth_test_enabled = new_state.depth_test_enabled;
+    }
+
+    if (current_state.write_to_depth_buffer != new_state.write_to_depth_buffer) {
+        glDepthMask(new_state.write_to_depth_buffer);
+        current_state.write_to_depth_buffer = new_state.write_to_depth_buffer;
+    }
+
+    if (current_state.depth_function != new_state.depth_function) {
+        glDepthFunc(new_state.depth_function);
+        current_state.depth_function = new_state.depth_function;
+    }
+
+    // Culling
+    if (current_state.culling_enabled != new_state.culling_enabled) {
+        if (current_state.culling_enabled) {
+            glEnable(GL_CULL_FACE);
+        } else {
+            glDisable(GL_CULL_FACE);
+        }
+
+        current_state.culling_enabled = new_state.culling_enabled;
+    }
+
+    if (current_state.culling_mode != new_state.culling_mode) {
+        glCullFace(new_state.culling_mode);
+        current_state.culling_mode = new_state.culling_mode;
+    }
+
+    if (current_state.front_face != new_state.front_face) {
+        glFrontFace(new_state.front_face);
+        current_state.front_face = new_state.front_face;
+    }
+}
+
 #include <iostream>
 void Render::sInstance::render_frame(const glm::mat4x4 &view_proj_mat) {
     glClearColor(0.0, 0.0, 0.0, 1.0);
@@ -67,6 +121,8 @@ void Render::sInstance::render_frame(const glm::mat4x4 &view_proj_mat) {
         sMeshBuffers &mesh = meshes[draw_call.mesh_id];
 
         model = draw_call.transform.get_model();
+
+        change_graphic_state(draw_call.call_state);
 
         material.enable();
 

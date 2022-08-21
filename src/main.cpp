@@ -55,6 +55,8 @@ int main() {
     assert(strstr(extensions, "WEBGL") != 0);
     free(extensions);
 
+    renderer.init();
+
     const uint8_t cube_mesh_id = 0;
     renderer.meshes[0].init_with_triangles(RawMesh::cube_geometry,
                                            sizeof(RawMesh::cube_geometry),
@@ -76,6 +78,7 @@ int main() {
         .mesh_id = cube_mesh_id,
         .material_id = basic_material_id
     };
+    //renderer.draw_stack[0].call_state.set_default();
 
     renderer.draw_stack_size++;
 

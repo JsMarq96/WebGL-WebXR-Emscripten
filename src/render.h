@@ -27,11 +27,37 @@
  * */
 namespace Render {
 
+    struct sGLState {
+        // Depth test config
+        bool depth_test_enabled = true;
+        bool write_to_depth_buffer = true;
+        uint32_t depth_function = GL_LESS;
+
+        // Culling info
+        bool culling_enabled = true;
+        uint32_t culling_mode = GL_FRONT;
+        uint32_t front_face = GL_CCW;
+
+        void set_default() {
+            depth_test_enabled = true;
+            write_to_depth_buffer = true;
+            depth_function = GL_LESS;
+
+            // Culling info
+            culling_enabled = true;
+            culling_mode = GL_FRONT;
+            front_face = GL_CCW;
+        }
+    };
+
+
     // TODO: Parenting
     struct sDrawCall {
         sTransform transform;
         uint8_t mesh_id;
         uint8_t material_id;
+
+        sGLState call_state;
     };
 
     struct sMeshBuffers {
@@ -51,6 +77,8 @@ namespace Render {
     };
     
     struct sInstance {
+        sGLState current_state;
+
         uint16_t material_count = 0;
         sMaterial materials[MATERIAL_TOTAL_COUNT];
         uint16_t meshes_count = 0;
@@ -59,6 +87,8 @@ namespace Render {
         uint16_t draw_stack_size = 0;
         sDrawCall draw_stack[DRAW_CALL_STACK_SIZE];
 
+        void init();
+        void change_graphic_state(const sGLState &new_state);
         void render_frame(const glm::mat4x4 &view_proj_mat);
     };
 
