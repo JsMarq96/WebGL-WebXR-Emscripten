@@ -108,12 +108,13 @@ void Render::sInstance::change_graphic_state(const sGLState &new_state) {
 }
 
 #include <iostream>
-void Render::sInstance::render_frame(const glm::mat4x4 &view_proj_mat) {
+void Render::sInstance::render_frame(const glm::mat4x4 &view_proj_mat,
+                                     const glm::vec3 &cam_pos) {
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-    glm::mat4x4 model;
+    glm::mat4x4 model, model_invert;
     for(uint16_t i = 0; i < draw_stack_size; i++) {
         sDrawCall &draw_call = draw_stack[i];
         sMaterial &material = materials[draw_call.material_id];
@@ -121,6 +122,7 @@ void Render::sInstance::render_frame(const glm::mat4x4 &view_proj_mat) {
         sMeshBuffers &mesh = meshes[draw_call.mesh_id];
 
         model = draw_call.transform.get_model();
+        model_invert = glm::inverse(model);
 
         change_graphic_state(draw_call.call_state);
 
@@ -130,6 +132,7 @@ void Render::sInstance::render_frame(const glm::mat4x4 &view_proj_mat) {
 
         shader.set_uniform_matrix4("u_model_mat", model);
         shader.set_uniform_matrix4("u_vp_mat", view_proj_mat);
+        shader.set_uniform_vector("u_camera_eye_local", glm::vec3(model_invert * glm::vec4(cam_pos, 1.0f)));
 
         if (mesh.is_indexed) {
             glDrawElements(mesh.primitive, mesh.primitive_count, GL_UNSIGNED_SHORT, 0);

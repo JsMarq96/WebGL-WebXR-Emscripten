@@ -162,9 +162,9 @@ void sTexture::load3D(const char* texture_name,
     glTexImage3D(GL_TEXTURE_3D,
                  0,
                  GL_RGBA,
-                 width_i,
-                 heigth_i,
-                 depth_i,
+                 width / width_i,
+                 height / heigth_i,
+                 width / width_i,
                  0,
                  GL_RGBA,
                  GL_UNSIGNED_BYTE,
@@ -175,6 +175,10 @@ void sTexture::load3D(const char* texture_name,
     //stbi_image_free(text->raw_data);
 }
 
+void sTexture::load_sphere_volume(const uint16_t size) {
+        //free(raw_data);
+}
+
 void sTexture::clean() {
     if (store_on_RAM) {
         //stbi_image_free(text->raw_data);
@@ -182,3 +186,56 @@ void sTexture::clean() {
 
     glDeleteTextures(1, &texture_id);
 }
+
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+
+void sTexture::load3D_async(const char *dir,
+                            const uint16_t width_i,
+                            const uint16_t heigth_i,
+                            const uint16_t depth_i) {
+    width = width_i;
+    height = heigth_i;
+    depth = depth_i;
+    // Load empty texture
+    glGenTextures(1, &texture_id);
+
+    glBindTexture(GL_TEXTURE_3D, texture_id);
+
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glBindTexture(GL_TEXTURE_3D, 0);
+
+    std::cout << "Start load of texture" << std::endl;
+    emscripten_async_wget_data(dir,
+                               this,
+                               [](void *arg, void *buffer, int size) {
+        sTexture* curr_text = (sTexture*) arg;
+        std::cout << "recieved texture" << std::endl;
+
+        // Check size
+
+        glBindTexture(GL_TEXTURE_3D, curr_text->texture_id);
+
+        glTexStorage3D(GL_TEXTURE_3D, 1, GL_R8, curr_text->width, 256, 256);
+        glTexSubImage3D(GL_TEXTURE_3D,
+                     0, 0, 0, 0,
+                     curr_text->width,
+                     curr_text->height,
+                     curr_text->depth,
+                     GL_RED,
+                     GL_UNSIGNED_BYTE,
+                     buffer);
+
+        glBindTexture(GL_TEXTURE_3D, 0);
+
+        std::cout << "recieved texture" << std::endl;
+
+    }, NULL);
+}
+
+#endif

@@ -20,6 +20,7 @@ struct sTexture {
     // Raw data
     int             width     = 0;
     int             height    = 0;
+    int             depth     = 0;
     int             layers    = 0;
     char            *raw_data = NULL;
 
@@ -35,8 +36,16 @@ struct sTexture {
                 const uint16_t heigth,
                 const uint16_t depth);
 
+    void load_sphere_volume(const uint16_t size);
+
     void clean();
 
+#ifdef __EMSCRIPTEN__
+    void load3D_async(const char* dir,
+                      const uint16_t width,
+                      const uint16_t heigth,
+                      const uint16_t depth);
+#endif
 };
 
 

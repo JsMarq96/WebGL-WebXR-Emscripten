@@ -89,7 +89,8 @@ namespace Render {
 
         void init();
         void change_graphic_state(const sGLState &new_state);
-        void render_frame(const glm::mat4x4 &view_proj_mat);
+        void render_frame(const glm::mat4x4 &view_proj_mat,
+                          const glm::vec3 &cam_pos);
     };
 
 };

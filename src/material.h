@@ -37,6 +37,7 @@ struct sMaterial {
     void add_raw_shader(const char     *vertex_shader,
                     const char     *fragment_shader);
 
+    void add_sphere_volume(const uint16_t size);
 
     void add_volume_texture(const char* text_dir,
                             const uint16_t tile_width,

@@ -77,11 +77,17 @@ void sMaterial::add_volume_texture(const char* text_dir,
                                 tile_depth);
 }
 
+void sMaterial::add_sphere_volume(const uint16_t size) {
+    enabled_textures[VOLUME_MAP] = true;
+    textures[VOLUME_MAP].load_sphere_volume(size);
+}
+
 /**
  * Binds the textures on Opengl
  *  COLOR - Texture 0
  *  NORMAL - Texture 1
  *  SPECULAR - TEXTURE 2
+ *  VOLUME - Texture 3
  * */
 void sMaterial::enable() const {
     shader.activate();
@@ -91,7 +97,12 @@ void sMaterial::enable() const {
             continue;
         }
         glActiveTexture(GL_TEXTURE0 + texture);
-        glBindTexture(GL_TEXTURE_2D, textures[texture].texture_id);
+
+        if (texture == 4) {
+            glBindTexture(GL_TEXTURE_3D, textures[texture].texture_id);
+        } else {
+            glBindTexture(GL_TEXTURE_2D, textures[texture].texture_id);
+        }
 
         shader.set_uniform_texture(texture_uniform_LUT[texture], texture);
     }
