@@ -44,6 +44,11 @@ struct sMaterial {
                             const uint16_t tile_heigth,
                             const uint16_t tile_depth);
 
+    void load_async_texture3D(const char* dir,
+                              const uint16_t width,
+                              const uint16_t heigth,
+                              const uint16_t depth);
+
     void add_texture(const char*          text_dir,
                      const eTextureType   text_type);
 

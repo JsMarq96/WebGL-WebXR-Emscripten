@@ -38,14 +38,9 @@ struct sTexture {
 
     void load_sphere_volume(const uint16_t size);
 
-    void clean();
+    void load_empty_volume();
 
-#ifdef __EMSCRIPTEN__
-    void load3D_async(const char* dir,
-                      const uint16_t width,
-                      const uint16_t heigth,
-                      const uint16_t depth);
-#endif
+    void clean();
 };
 
 

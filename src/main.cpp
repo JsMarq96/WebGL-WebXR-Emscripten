@@ -1,3 +1,4 @@
+#include <GLES3/gl3.h>
 #include <cstdlib>
 #include <emscripten/emscripten.h>
 #include <emscripten/html5_webgl.h>
@@ -74,16 +75,18 @@ int main() {
                                                            16,
                                                            16,
                                                            16);*/
-    renderer.materials[volume_material].textures[VOLUME_MAP].load3D_async("http://localhost:6931/resources/volumes/bonsai_256x256x256_uint8.raw",
-                                                                          256,
-                                                                          256,
-                                                                          256);
+    renderer.materials[volume_material].load_async_texture3D("http://localhost:6931/resources/volumes/bonsai_256x256x256_uint8.raw",
+                                                             256,
+                                                             256,
+                                                             256);
 
     renderer.draw_stack[0] = {
         .mesh_id = cube_mesh_id,
         .material_id = volume_material
     };
-    //enderer.draw_stack[0].call_state.set_default();
+    renderer.draw_stack[0].call_state.set_default();
+
+    //glDisable(GL_CULL_FACE);
 
     renderer.draw_stack_size++;
 

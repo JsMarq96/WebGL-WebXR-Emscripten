@@ -52,6 +52,11 @@ namespace Render {
             culling_enabled = true;
             culling_mode = GL_BACK;
             front_face = GL_CCW;
+
+            // Blending
+            blending_enabled = true;
+            blend_func_x = GL_ONE;
+            blend_func_y = GL_ONE_MINUS_SRC_ALPHA;
         }
     };
 

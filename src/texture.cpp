@@ -187,16 +187,7 @@ void sTexture::clean() {
     glDeleteTextures(1, &texture_id);
 }
 
-#ifdef __EMSCRIPTEN__
-#include <emscripten.h>
-
-void sTexture::load3D_async(const char *dir,
-                            const uint16_t width_i,
-                            const uint16_t heigth_i,
-                            const uint16_t depth_i) {
-    width = width_i;
-    height = heigth_i;
-    depth = depth_i;
+void sTexture::load_empty_volume() {
     // Load empty texture
     glGenTextures(1, &texture_id);
 
@@ -209,33 +200,4 @@ void sTexture::load3D_async(const char *dir,
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     glBindTexture(GL_TEXTURE_3D, 0);
-
-    std::cout << "Start load of texture" << std::endl;
-    emscripten_async_wget_data(dir,
-                               this,
-                               [](void *arg, void *buffer, int size) {
-        sTexture* curr_text = (sTexture*) arg;
-        std::cout << "recieved texture" << std::endl;
-
-        // Check size
-
-        glBindTexture(GL_TEXTURE_3D, curr_text->texture_id);
-
-        glTexStorage3D(GL_TEXTURE_3D, 1, GL_R8, curr_text->width, 256, 256);
-        glTexSubImage3D(GL_TEXTURE_3D,
-                     0, 0, 0, 0,
-                     curr_text->width,
-                     curr_text->height,
-                     curr_text->depth,
-                     GL_RED,
-                     GL_UNSIGNED_BYTE,
-                     buffer);
-
-        glBindTexture(GL_TEXTURE_3D, 0);
-
-        std::cout << "recieved texture" << std::endl;
-
-    }, NULL);
 }
-
-#endif
