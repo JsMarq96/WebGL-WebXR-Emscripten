@@ -55,15 +55,18 @@ void Render::sMeshBuffers::init_with_triangles(const float *geometry,
 
 void Render::sInstance::init() {
     // Set default
+    current_state.depth_test_enabled = true;
     glEnable(GL_DEPTH_TEST);
     glDepthMask(current_state.write_to_depth_buffer);
     glDepthFunc(current_state.depth_function);
 
+    current_state.culling_enabled = true;
     glEnable(GL_CULL_FACE);
     glCullFace(current_state.culling_mode);
     glFrontFace(current_state.front_face);
 }
 
+#include <iostream>
 void Render::sInstance::change_graphic_state(const sGLState &new_state) {
     // Depth
     if (current_state.depth_test_enabled != new_state.depth_test_enabled) {
@@ -85,7 +88,7 @@ void Render::sInstance::change_graphic_state(const sGLState &new_state) {
         current_state.depth_function = new_state.depth_function;
     }
 
-    // Culling
+    // Face Culling
     if (current_state.culling_enabled != new_state.culling_enabled) {
         if (current_state.culling_enabled) {
             glEnable(GL_CULL_FACE);
@@ -104,6 +107,25 @@ void Render::sInstance::change_graphic_state(const sGLState &new_state) {
     if (current_state.front_face != new_state.front_face) {
         glFrontFace(new_state.front_face);
         current_state.front_face = new_state.front_face;
+    }
+
+    // Blending
+    if (current_state.blending_enabled != new_state.blending_enabled) {
+        if (new_state.blending_enabled) {
+            glEnable(GL_BLEND);
+        } else {
+            glDisable(GL_BLEND);
+        }
+
+        current_state.blending_enabled = new_state.blending_enabled;
+
+        if (current_state.blend_func_x != new_state.blend_func_x ||
+            current_state.blend_func_y != new_state.blend_func_y) {
+            glBlendFunc(new_state.blend_func_x, new_state.blend_func_y);
+        }
+
+        current_state.blend_func_x = new_state.blend_func_x;
+        current_state.blend_func_y = new_state.blend_func_y;
     }
 }
 

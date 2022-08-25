@@ -35,8 +35,13 @@ namespace Render {
 
         // Culling info
         bool culling_enabled = true;
-        uint32_t culling_mode = GL_FRONT;
+        uint32_t culling_mode = GL_BACK;
         uint32_t front_face = GL_CCW;
+
+        // Blending
+        bool blending_enabled = true;
+        uint32_t blend_func_x = GL_ONE;
+        uint32_t blend_func_y = GL_ONE_MINUS_SRC_ALPHA;
 
         void set_default() {
             depth_test_enabled = true;
@@ -45,7 +50,7 @@ namespace Render {
 
             // Culling info
             culling_enabled = true;
-            culling_mode = GL_FRONT;
+            culling_mode = GL_BACK;
             front_face = GL_CCW;
         }
     };
