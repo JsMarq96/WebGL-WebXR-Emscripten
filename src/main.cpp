@@ -87,6 +87,12 @@ int main() {
     uint8_t second_render_pass = renderer.add_render_pass(Render::SCREEN_TARGET,
                                                           0);
 
+    // Set the clear value for the first pass
+    renderer.render_passes[first_render_pass].rgba_clear_values[0] = 2.0f;
+    renderer.render_passes[first_render_pass].rgba_clear_values[1] = 2.0f;
+    renderer.render_passes[first_render_pass].rgba_clear_values[2] = 2.0f;
+    renderer.render_passes[first_render_pass].rgba_clear_values[3] = 2.0f;
+
     renderer.add_drawcall_to_pass(first_render_pass, {
         .mesh_id = cube_mesh_id,
         .material_id = first_pass_material_id,

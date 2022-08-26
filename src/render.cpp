@@ -153,8 +153,13 @@ void Render::sInstance::render_frame(const glm::mat4x4 &view_proj_mat,
         }
 
         // Celar the curent buffer
-        glClearColor(0.0, 0.0, 0.0, 1.0);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        if (pass.clean_viewport) {
+            glClearColor(pass.rgba_clear_values[0],
+                         pass.rgba_clear_values[1],
+                         pass.rgba_clear_values[2],
+                         pass.rgba_clear_values[3]);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        }
 
         // Run the render calls
         glm::mat4x4 model, model_invert;

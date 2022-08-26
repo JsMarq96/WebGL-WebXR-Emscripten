@@ -95,6 +95,10 @@ namespace Render {
     };
 
     struct sRenderPass {
+        bool clean_viewport = true;
+        uint32_t clean_config;
+        float rgba_clear_values[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+
         eRenderPassTarget target = SCREEN_TARGET;
 
         bool use_prev_color_attachment = false;
