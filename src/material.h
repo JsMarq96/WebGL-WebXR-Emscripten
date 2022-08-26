@@ -6,6 +6,7 @@
 #include <cstdint>
 #include "texture.h"
 #include "shader.h"
+#include "fbo.h"
 
 #define TEXTURE_SIZE 3
 
@@ -82,6 +83,7 @@ struct sMaterial {
 
         return tmp;
     };
+
 
     /**
     * Binds the textures on Opengl

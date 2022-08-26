@@ -4,11 +4,14 @@
 #include "transform.h"
 #include "shader.h"
 #include "material.h"
+#include "fbo.h"
 
 #define SHADER_TOTAL_COUNT 10
 #define MESH_TOTAL_COUNT 20
 #define MATERIAL_TOTAL_COUNT 30
+#define FBO_TOTAL_COUNT 5
 #define DRAW_CALL_STACK_SIZE 30
+#define RENDER_PASS_COUNT 4
 /**
  * A Wrapper for the rendering backend, for now with webgl
  * TODO:
@@ -26,6 +29,11 @@
  *  Set this flags on each drawcall, and change when necesary
  * */
 namespace Render {
+
+    enum eRenderPassTarget : uint8_t {
+        SCREEN_TARGET = 0,
+        FBO_TARGET
+    };
 
     struct sGLState {
         // Depth test config
@@ -85,22 +93,49 @@ namespace Render {
                                  const uint16_t *indices,
                                  const uint32_t indices_size);
     };
+
+    struct sRenderPass {
+        eRenderPassTarget target = SCREEN_TARGET;
+
+        uint8_t fbo_id;
+
+        uint8_t draw_stack_size = 0;
+        sDrawCall draw_stack[DRAW_CALL_STACK_SIZE];
+    };
     
     struct sInstance {
         sGLState current_state;
 
-        uint16_t material_count = 0;
+        uint8_t fbo_count = 0;
+        sFBO fbos[FBO_TOTAL_COUNT];
+        uint8_t material_count = 0;
         sMaterial materials[MATERIAL_TOTAL_COUNT];
-        uint16_t meshes_count = 0;
+        uint8_t meshes_count = 0;
         sMeshBuffers meshes[MESH_TOTAL_COUNT];
 
-        uint16_t draw_stack_size = 0;
-        sDrawCall draw_stack[DRAW_CALL_STACK_SIZE];
+        uint16_t render_pass_size = 0;
+        sRenderPass render_passes[RENDER_PASS_COUNT];
 
         void init();
         void change_graphic_state(const sGLState &new_state);
         void render_frame(const glm::mat4x4 &view_proj_mat,
                           const glm::vec3 &cam_pos);
+
+        // Inlines
+        inline void add_drawcall_to_pass(const uint8_t pass_id,
+                                         const sDrawCall &draw_call) {
+            sRenderPass &pass = render_passes[pass_id];
+
+            pass.draw_stack[pass.draw_stack_size++] = draw_call;
+        }
+
+        inline uint8_t add_render_pass(const eRenderPassTarget target,
+                                       const uint8_t fbo_id) {
+            render_passes[render_pass_size].target = target;
+            render_passes[render_pass_size].fbo_id = fbo_id;
+            return render_pass_size++;
+        }
+
     };
 
 };

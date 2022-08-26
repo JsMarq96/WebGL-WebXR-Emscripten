@@ -114,7 +114,13 @@ void sMaterial::add_sphere_volume(const uint16_t size) {
         glBindTexture(GL_TEXTURE_3D, curr_text->texture_id);
 
         // Re-fill the texture
-        glTexStorage3D(GL_TEXTURE_3D, 1, GL_R8, curr_text->width, 256, 256);
+        glTexStorage3D(GL_TEXTURE_3D,
+                       1,
+                       GL_R8,
+                       curr_text->width,
+                       curr_text->height,
+                       curr_text->depth);
+
         glTexSubImage3D(GL_TEXTURE_3D,
                      0, 0, 0, 0,
                      curr_text->width,

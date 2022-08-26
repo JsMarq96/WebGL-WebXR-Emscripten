@@ -71,24 +71,17 @@ int main() {
                                                        RawShaders::basic_fragment);
     renderer.material_count += 2;
 
-    /*renderer.materials[volume_material].add_volume_texture("/volumes/teapot_16_16.png",
-                                                           16,
-                                                           16,
-                                                           16);*/
     renderer.materials[volume_material].load_async_texture3D("http://localhost:6931/resources/volumes/bonsai_256x256x256_uint8.raw",
                                                              256,
                                                              256,
                                                              256);
 
-    renderer.draw_stack[0] = {
+    uint8_t first_render_pass = renderer.add_render_pass(Render::SCREEN_TARGET,
+                                                         0);
+    renderer.add_drawcall_to_pass(first_render_pass,{
         .mesh_id = cube_mesh_id,
         .material_id = volume_material
-    };
-    renderer.draw_stack[0].call_state.set_default();
-
-    //glDisable(GL_CULL_FACE);
-
-    renderer.draw_stack_size++;
+    });
 
     emscripten_set_main_loop(render_frame, 0, 0);
 }
