@@ -27,6 +27,9 @@ struct sTexture {
     // OpenGL id
     unsigned int     texture_id;
 
+    void create_empty2D_with_size(const uint32_t width,
+                                const uint32_t height);
+
     void load(const eTextureType text_type,
               const bool store_on_RAM,
               const char *texture_name);

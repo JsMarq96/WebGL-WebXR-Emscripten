@@ -38,11 +38,11 @@ out vec4 o_frag_color;
 uniform vec3 u_camera_eye_local;
 uniform highp sampler3D u_volume_map;
 
-const int MAX_ITERATIONS =100;
-const float STEP_SIZE = 0.001;
+const int MAX_ITERATIONS = 300;
+const float STEP_SIZE = 0.005;
 
 vec4 render_volume() {
-   vec3 ray_dir = normalize(v_local_position - u_camera_eye_local);
+   vec3 ray_dir = normalize(u_camera_eye_local - v_local_position);
    vec3 it_pos = vec3(0.0);
    vec4 final_color = vec4(0.0);
    float ray_step = 1.0 / float(MAX_ITERATIONS);
@@ -54,14 +54,14 @@ vec4 render_volume() {
       vec3 sample_pos = ((v_local_position - it_pos) / 2.0) + 0.5;
 
       float depth = texture(u_volume_map, sample_pos).r;
-      vec4 sample_color = vec4(depth);
+      vec4 sample_color = vec4(25.6 * depth);
       final_color = final_color + (STEP_SIZE * (1.0 - final_color.a) * sample_color);
 
       it_pos = it_pos + (STEP_SIZE * ray_dir);
    }
    //return vec4(v_local_position, 1.0);
-   //return vec4(final_color.xyz, 1.0);
-   return final_color;
+   return vec4(final_color.xyz, 1.0);
+   //return final_color;
 }
 
 void main() {
