@@ -97,6 +97,9 @@ namespace Render {
     struct sRenderPass {
         eRenderPassTarget target = SCREEN_TARGET;
 
+        bool use_prev_color_attachment = false;
+        uint8_t color_attachment_pass_id = 0;
+
         uint8_t fbo_id;
 
         uint8_t draw_stack_size = 0;
@@ -119,7 +122,9 @@ namespace Render {
         void init();
         void change_graphic_state(const sGLState &new_state);
         void render_frame(const glm::mat4x4 &view_proj_mat,
-                          const glm::vec3 &cam_pos);
+                          const glm::vec3 &cam_pos,
+                          const int32_t width,
+                          const int32_t heigth);
 
         // Inlines
         inline void add_drawcall_to_pass(const uint8_t pass_id,
@@ -134,6 +139,21 @@ namespace Render {
             render_passes[render_pass_size].target = target;
             render_passes[render_pass_size].fbo_id = fbo_id;
             return render_pass_size++;
+        }
+
+        inline uint8_t get_new_fbo_id() {
+            assert(fbo_count < FBO_TOTAL_COUNT && "No more space for FBOs");
+            return fbo_count++;
+        }
+
+        inline uint8_t get_new_material_id() {
+            assert(material_count < MATERIAL_TOTAL_COUNT && "No more space for Materials");
+            return material_count++;
+        }
+
+        inline uint8_t get_new_mesh_id() {
+            assert(meshes_count < MESH_TOTAL_COUNT && "No more space for meshes");
+            return meshes_count++;
         }
 
     };

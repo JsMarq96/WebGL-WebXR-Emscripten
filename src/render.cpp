@@ -131,13 +131,23 @@ void Render::sInstance::change_graphic_state(const sGLState &new_state) {
 
 #include <iostream>
 void Render::sInstance::render_frame(const glm::mat4x4 &view_proj_mat,
-                                     const glm::vec3 &cam_pos) {
+                                     const glm::vec3 &cam_pos,
+                                     const int32_t width,
+                                     const int32_t heigth) {
     for(uint16_t j = 0; j < render_pass_size; j++) {
         // Bind the render pass
         sRenderPass &pass = render_passes[j];
 
         if (pass.target == FBO_TARGET) {
-            fbos[pass.fbo_id].bind();
+            sFBO &curr_fbo = fbos[pass.fbo_id];
+
+            if (curr_fbo.width != width ||
+                curr_fbo.height != heigth) {
+                curr_fbo.clean();
+                curr_fbo.init_with_color(width, heigth);
+            }
+
+            curr_fbo.bind();
         } else {
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
@@ -153,6 +163,11 @@ void Render::sInstance::render_frame(const glm::mat4x4 &view_proj_mat,
             sMaterial &material = materials[draw_call.material_id];
             sShader &shader = material.shader;
             sMeshBuffers &mesh = meshes[draw_call.mesh_id];
+
+
+            if (pass.use_prev_color_attachment) {
+                material.add_color_attachment_from_fbo(fbos[render_passes[pass.color_attachment_pass_id].fbo_id]);
+            }
 
             model = draw_call.transform.get_model();
             model_invert = glm::inverse(model);

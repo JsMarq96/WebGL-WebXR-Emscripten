@@ -26,7 +26,7 @@ void main() {
 )";
 
 
-const char basic_fragment[] = R"(#version 300 es
+const char volumetric_fragment[] = R"(#version 300 es
 precision highp float;
 
 in vec2 v_uv;
@@ -71,6 +71,19 @@ void main() {
 }
 )";
 
+const char local_fragment[] = R"(#version 300 es
+precision highp float;
+
+in vec2 v_uv;
+in vec3 v_world_position;
+in vec3 v_local_position;
+
+out vec4 o_frag_color;
+
+void main() {
+    o_frag_color = vec4(v_local_position, 1.0);
+}
+)";
 
 };
 

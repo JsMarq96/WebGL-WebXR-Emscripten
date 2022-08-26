@@ -16,6 +16,7 @@ enum eTextureMapType : int {
     SPECULAR_MAP,
     METALLIC_ROUGHNESS_MAP,
     VOLUME_MAP,
+    COLOR_ATTACHMENT,
     TEXTURE_MAP_TYPE_COUNT
 };
 
@@ -24,7 +25,8 @@ const char texture_uniform_LUT[TEXTURE_MAP_TYPE_COUNT][25] = {
    "u_normal_map",
    "u_metallic_rough_map",
    "u_metallic_rough_map",
-   "u_volume_map"
+   "u_volume_map",
+   "u_frame_color_attachment"
 };
 
 struct sMaterial {
@@ -61,6 +63,11 @@ struct sMaterial {
                          const eTextureType text_type);
 
     void add_cubemap_texture(const char  *text_dir);
+
+    void add_color_attachment_from_fbo(const sFBO &fbo) {
+        enabled_textures[COLOR_ATTACHMENT] = true;
+        textures[COLOR_ATTACHMENT] = fbo.color_attachment;
+    }
 
     uint8_t get_used_textures() const {
         uint8_t tmp = 0b0;

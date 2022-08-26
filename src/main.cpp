@@ -37,7 +37,7 @@ void render_frame() {
 
     glViewport(0, 0, width, height);
 
-    renderer.render_frame(view_proj_mat, glm::vec3{2.0f, 0.50f, 2.0f});
+    renderer.render_frame(view_proj_mat, glm::vec3{2.0f, 0.50f, 2.0f}, width, height);
 }
 
 
@@ -59,29 +59,47 @@ int main() {
 
     renderer.init();
 
-    const uint8_t cube_mesh_id = 0;
-    renderer.meshes[0].init_with_triangles(RawMesh::cube_geometry,
+    // Loading assets
+    const uint8_t cube_mesh_id = renderer.get_new_mesh_id();
+    renderer.meshes[cube_mesh_id].init_with_triangles(RawMesh::cube_geometry,
                                            sizeof(RawMesh::cube_geometry),
                                            RawMesh::cube_indices,
                                            sizeof(RawMesh::cube_indices));
-    renderer.meshes_count++;
 
-    const uint8_t basic_material_id = 0, volume_material = 1;
+    const uint8_t first_pass_material_id = renderer.get_new_material_id();
+    renderer.materials[first_pass_material_id].add_raw_shader(RawShaders::basic_vertex,
+                                                              RawShaders::local_fragment);
+
+    const uint8_t volume_material = renderer.get_new_material_id();
     renderer.materials[volume_material].add_raw_shader(RawShaders::basic_vertex,
-                                                       RawShaders::basic_fragment);
-    renderer.material_count += 2;
+                                                       RawShaders::volumetric_fragment);
 
     renderer.materials[volume_material].load_async_texture3D("http://localhost:6931/resources/volumes/bonsai_256x256x256_uint8.raw",
                                                              256,
                                                              256,
                                                              256);
 
-    uint8_t first_render_pass = renderer.add_render_pass(Render::SCREEN_TARGET,
-                                                         0);
-    renderer.add_drawcall_to_pass(first_render_pass,{
+    // Create render pipeline
+    uint8_t first_pass_fbo_id = renderer.get_new_fbo_id();
+    uint8_t first_render_pass = renderer.add_render_pass(Render::FBO_TARGET,
+                                                         first_pass_fbo_id);
+
+    uint8_t second_render_pass = renderer.add_render_pass(Render::SCREEN_TARGET,
+                                                          0);
+
+    renderer.add_drawcall_to_pass(first_render_pass, {
+        .mesh_id = cube_mesh_id,
+        .material_id = first_pass_material_id,
+        .call_state = {
+            .culling_mode = GL_FRONT
+        }
+    });
+
+    renderer.add_drawcall_to_pass(second_render_pass, {
         .mesh_id = cube_mesh_id,
         .material_id = volume_material
     });
+
 
     emscripten_set_main_loop(render_frame, 0, 0);
 }
