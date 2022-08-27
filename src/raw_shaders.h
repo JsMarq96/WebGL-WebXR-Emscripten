@@ -53,12 +53,14 @@ vec4 render_volume() {
    vec4 final_color = vec4(0.0);
    float ray_step = 1.0 / float(MAX_ITERATIONS);
 
+   // TODO: optimize iterations size, and step size
    for(int i = 0; i < MAX_ITERATIONS; i++) {
       if (final_color.a >= 0.95) {
          break;
       }
       vec3 sample_pos = ((v_local_position - it_pos) / 2.0) + 0.5;
 
+      // Aboid clipping outside
       if (sample_pos.x < 0.0 || sample_pos.y < 0.0 || sample_pos.z < 0.0) {
          break;
       }
@@ -67,6 +69,7 @@ vec4 render_volume() {
       }
 
       float depth = texture(u_volume_map, sample_pos).r;
+      // Increase luminosity, only on the colors
       vec4 sample_color = vec4(05.6 * depth);
       sample_color.a = depth;
 
@@ -78,10 +81,7 @@ vec4 render_volume() {
 }
 
 void main() {
-   //o_frag_color = vec4(texture(u_frame_color_attachment, v_screen_position.xy).xyz, 1.0);
-   //o_frag_color = vec4(v_screen_position, 0.0, 1.0);
    o_frag_color = render_volume(); //* vec4(1.0, 0.0, 0.0, 1.0);
-   //o_frag_color = vec4(textur)
 }
 )";
 
