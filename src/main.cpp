@@ -87,6 +87,9 @@ int main() {
     uint8_t second_render_pass = renderer.add_render_pass(Render::SCREEN_TARGET,
                                                           0);
 
+    renderer.render_passes[second_render_pass].use_prev_color_attachment = true;
+    renderer.render_passes[second_render_pass].color_attachment_pass_id = first_render_pass;
+
     // Set the clear value for the first pass
     renderer.render_passes[first_render_pass].rgba_clear_values[0] = 2.0f;
     renderer.render_passes[first_render_pass].rgba_clear_values[1] = 2.0f;
