@@ -46,11 +46,13 @@ const int MAX_ITERATIONS = 1000;
 const float STEP_SIZE = 0.0015;
 
 vec4 render_volume() {
-   //vec3 back_pos = texture(u_frame_color_attachment, v_local_position).rgb;
+   vec3 back_pos = texture(u_frame_color_attachment, v_screen_position).rgb;
+
    vec3 ray_dir = normalize(u_camera_eye_local - v_local_position);
    vec3 it_pos = vec3(0.0);
    vec4 final_color = vec4(0.0);
    float ray_step = 1.0 / float(MAX_ITERATIONS);
+
    for(int i = 0; i < MAX_ITERATIONS; i++) {
       if (final_color.a >= 0.95) {
          break;
@@ -65,15 +67,14 @@ vec4 render_volume() {
       }
 
       float depth = texture(u_volume_map, sample_pos).r;
-      vec4 sample_color = vec4(15.6 * depth);
+      vec4 sample_color = vec4(05.6 * depth);
       sample_color.a = depth;
 
       final_color = final_color + (STEP_SIZE * (1.0 - final_color.a) * sample_color);
       it_pos = it_pos + (STEP_SIZE * ray_dir);
    }
-   //return vec4(v_local_position, 1.0);
+
    return vec4(final_color.xyz, 1.0);
-   //return final_color;
 }
 
 void main() {
