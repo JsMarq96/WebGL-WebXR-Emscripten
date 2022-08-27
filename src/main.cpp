@@ -40,6 +40,10 @@ void render_frame() {
     renderer.render_frame(view_proj_mat, glm::vec3{2.0f, 0.50f, 2.0f}, width, height);
 }
 
+void render_stereoscopic_frame() {
+
+}
+
 
 int main() {
     EmscriptenWebGLContextAttributes attrs;
