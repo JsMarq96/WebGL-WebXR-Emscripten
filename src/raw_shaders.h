@@ -42,8 +42,8 @@ uniform vec3 u_camera_eye_local;
 uniform highp sampler3D u_volume_map;
 uniform highp sampler2D u_frame_color_attachment;
 
-const int MAX_ITERATIONS = 1000;
-const float STEP_SIZE = 0.0015;
+const int MAX_ITERATIONS = 100;
+const float STEP_SIZE = 0.02;
 
 vec4 render_volume() {
    vec3 back_pos = texture(u_frame_color_attachment, v_screen_position).rgb;
