@@ -113,6 +113,8 @@ namespace Render {
     struct sInstance {
         sGLState current_state;
 
+        uint32_t base_framebuffer = 0;
+
         uint8_t fbo_count = 0;
         sFBO fbos[FBO_TOTAL_COUNT];
         uint8_t material_count = 0;

@@ -149,7 +149,7 @@ void Render::sInstance::render_frame(const glm::mat4x4 &view_proj_mat,
 
             curr_fbo.bind();
         } else {
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            glBindFramebuffer(GL_FRAMEBUFFER, base_framebuffer);
         }
 
         // Celar the curent buffer

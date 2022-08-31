@@ -26,13 +26,15 @@ Render::sInstance renderer;
 
 
 void render_stereoscopic_frame(void *user_data,
+                               int framebuffer_id,
                                int time,
                                WebXRRigidTransform *head_pose,
                                WebXRView views[2],
                                int view_count) {
-    Render::sInstance *render = (Render::sInstance*) user_data;
+    //Render::sInstance *render = (Render::sInstance*) user_data;
     glm::mat4x4 view;
     glm::mat4x4 view_proj;
+    renderer.base_framebuffer = framebuffer_id;
 
     for(uint16_t i = 0; i < 2; i++) {
         view = glm::make_mat4(views[i].viewPose.matrix);
