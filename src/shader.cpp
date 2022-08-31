@@ -3,6 +3,7 @@
 #include <iostream>
 #include <errno.h>
 #include <cstring>
+#include <glm/gtc/type_ptr.hpp>
 
 // To do: Show programming errors
 sShader::sShader(const char* vertex_shader_raw,
@@ -191,7 +192,7 @@ void sShader::set_uniform_matrix3(const char* name,
 }
 
 void sShader::set_uniform_matrix4(const char* name, const glm::mat4x4 &matrix) const {
-    glUniformMatrix4fv(glGetUniformLocation(ID, name), 1, false, (float*) &matrix);
+    glUniformMatrix4fv(glGetUniformLocation(ID, name), 1, false, glm::value_ptr(matrix));
 }
 
 void sShader::set_uniform_texture(const char* name,

@@ -12,7 +12,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <glm/gtx/string_cast.hpp>
 #include "glm/ext/matrix_float4x4.hpp"
+#include "glm/gtx/dual_quaternion.hpp"
 #include "material.h"
 #include "raw_meshes.h"
 #include "raw_shaders.h"
@@ -32,33 +34,53 @@ void render_stereoscopic_frame(void *user_data,
                                WebXRRigidTransform *head_pose,
                                WebXRView views[2],
                                int view_count) {
-    //Render::sInstance *render = (Render::sInstance*) user_data;
     glm::mat4x4 view;
     glm::mat4x4 view_proj;
     renderer.base_framebuffer = framebuffer_id;
 
+    glm::mat4x4 view_mat = glm::lookAt(glm::vec3{2.0f, 0.50f, 2.0f},
+                                       glm::vec3{0.0f, 0.0f ,0.0f},
+                                       glm::vec3{0.0f, 1.0f, 0.0f});
+
+   // std::cout << glm::to_string(view_mat) << " <- perfect" << std::endl;
+
+
+    glm::mat4 headest_model = glm::make_mat4(head_pose[0].matrix);
+
+    float col[2] = {0.0, 1.0f};
+
     for(uint16_t i = 0; i < 2; i++) {
-        view = glm::make_mat4(views[i].viewPose.matrix);
+        view = headest_model * glm::inverse(glm::make_mat4(views[i].viewPose.matrix));
+        view = glm::translate(view, glm::vec3(0.0, -5.5, 0.0));
+        std::cout << glm::to_string(view) << " <- other" << std::endl;
+
         view_proj = glm::make_mat4(views[i].projectionMatrix) * view;
 
-        glViewport(views[i].viewport[0],
-                   views[i].viewport[1],
-                   views[i].viewport[2],
-                   views[i].viewport[3]);
+        //renderer.current_state.set_default();
 
-        renderer.render_frame(view_proj,
-                              glm::vec3{2.0f, 0.50f, 2.0f},
-                              views[i].viewport[2],
-                              views[i].viewport[3]);
+        glViewport((int)views[i].viewport[0],
+                   (int)views[i].viewport[1],
+                   (int)views[i].viewport[2],
+                   (int)views[i].viewport[3]);
 
-        std::cout << "Frame " << std::endl;
+            /*glClearColor(col[i], 0.0, 0.0, 1.0);
+                std::cout << i << std::endl;
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);*/
+
+         renderer.render_frame(view_proj,
+                          glm::vec3{2.0f, 0.50f, 2.0f},
+                          views[i].viewport[2],
+                          views[i].viewport[3]);
+
+        //std::cout << "Frame "  << views[i].viewport[0] << " " << views[i].viewport[1] << " " << views[i].viewport[2] << " "  << views[i].viewport[3] << " "<< std::endl;
     }
 }
 
 void init_XR_session(void* userData,
                      int mode) {
     std::cout << "Init" << std::endl;
-    webxr_set_projection_params(0.01f, 100.f);
+    webxr_set_projection_params(0.01f, 10000.f);
 }
 
 void close_XR_session(void* userData,
@@ -76,10 +98,16 @@ void render_frame() {
                                        glm::vec3{0.0f, 0.0f ,0.0f},
                                        glm::vec3{0.0f, 1.0f, 0.0f});
 
+    float mat[] = {0.992153, 0.046731, -0.115965, 0.000000,-0.113348, 0.727629, -0.676541, 0.000000,0.052764, 0.684377, 0.727217, 0.000000,0.007016, -0.003467, 0.001067, 1.000000};
+    //view_proj_mat = glm::make_mat4(mat) * view_mat;
+
+
     glm::mat4x4 view_proj_mat = glm::perspective(glm::radians(90.0f),
                                                  (float) ((float) width / height),
                                                  0.1f,
-                                                 10000.0f) * view_mat;
+                                                 10000.0f) * (glm::make_mat4(mat));
+
+        renderer.base_framebuffer = 0;
 
     glViewport(0, 0, width, height);
 
@@ -162,49 +190,19 @@ int main() {
 
     // Create render pipeline
     uint8_t first_pass_fbo_id = renderer.get_new_fbo_id();
-    uint8_t first_render_pass = renderer.add_render_pass(Render::FBO_TARGET,
-                                                         first_pass_fbo_id);
 
-    uint8_t second_render_pass = renderer.add_render_pass(Render::SCREEN_TARGET,
+    uint8_t first_render_pass = renderer.add_render_pass(Render::SCREEN_TARGET,
                                                           0);
-
-    renderer.render_passes[second_render_pass].use_prev_color_attachment = true;
-    renderer.render_passes[second_render_pass].color_attachment_pass_id = first_render_pass;
-
-    // Set the clear value for the first pass
-    renderer.render_passes[first_render_pass].rgba_clear_values[0] = 2.0f;
-    renderer.render_passes[first_render_pass].rgba_clear_values[1] = 2.0f;
-    renderer.render_passes[first_render_pass].rgba_clear_values[2] = 2.0f;
-    renderer.render_passes[first_render_pass].rgba_clear_values[3] = 2.0f;
-
-    renderer.render_passes[second_render_pass].rgba_clear_values[0] = 1.0f;
-    renderer.render_passes[second_render_pass].rgba_clear_values[1] = 0.0f;
-    renderer.render_passes[first_render_pass].rgba_clear_values[2] = 2.0f;
-    renderer.render_passes[first_render_pass].rgba_clear_values[3] = 2.0f;
-
-
     renderer.add_drawcall_to_pass(first_render_pass, {
         .mesh_id = cube_mesh_id,
-        .material_id = first_pass_material_id,
-        .call_state = {
-            .culling_mode = GL_FRONT
-        }
+        .material_id = volume_material,
+        .call_state = {.culling_enabled = false}
     });
 
-    renderer.add_drawcall_to_pass(second_render_pass, {
-        .mesh_id = cube_mesh_id,
-        .material_id = volume_material
-    });
+    //renderer.render_passes[first_render_pass].draw_stack[0].transform.position = glm::vec3(0.0, 5.0f, 0.0f);
+
 
     //emscripten_set_main_loop(render_frame, 0, 0);
 
     int i;
-    webxr_init( render_stereoscopic_frame,
-                     init_XR_session,
-                     close_XR_session,
-                     [](void* userData, int error) {
-                         std::cout << "ERROR " << error << std::endl;
-                     },
-                     &renderer);
-
 }

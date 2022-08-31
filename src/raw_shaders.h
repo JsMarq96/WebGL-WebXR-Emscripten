@@ -22,7 +22,7 @@ void main() {
     v_world_position = world_pos.xyz;
     v_local_position = a_pos;
     v_uv = a_uv;
-    gl_Position = u_vp_mat * world_pos;
+    gl_Position =  u_vp_mat * vec4(a_pos, 1.0);
     v_screen_position = ((gl_Position.xy / gl_Position.w) + 1.0) / 2.0;
 }
 )";
@@ -81,7 +81,8 @@ vec4 render_volume() {
 }
 
 void main() {
-   o_frag_color = render_volume(); //* vec4(1.0, 0.0, 0.0, 1.0);
+   //o_frag_color = render_volume(); //*
+   o_frag_color = vec4(1.0, 0.0, 0.0, 1.0);
 }
 )";
 
