@@ -1,5 +1,6 @@
 #include <GLES3/gl3.h>
 #include <cstdlib>
+#include <emscripten/em_asm.h>
 #include <emscripten/emscripten.h>
 #include <emscripten/html5_webgl.h>
 #include <emscripten/html5.h>
@@ -86,11 +87,29 @@ void render_frame() {
                           glm::vec3{2.0f, 0.50f, 2.0f},
                           width,
                           height);
-
-    //EM_ASM("console.log(navigator.xr);");
-
 }
 
+void xr_session_start(void *user_data,
+                      int mode) {
+    std::cout << mode << "start" << std::endl;
+}
+
+void xr_session_end(void *user_data,
+                      int mode) {
+    //
+}
+
+
+
+void xr_error(void* user_data, int error) {
+    std::cout << "Error " << error << std::endl;
+}
+
+void xr_supported_session_callback(int mode, int supported) {
+    std::cout << mode << " " << supported << std::endl;
+
+    EM_ASM(alert($0), supported);
+}
 
 int main() {
     EmscriptenWebGLContextAttributes attrs;
@@ -101,6 +120,9 @@ int main() {
     EMSCRIPTEN_WEBGL_CONTEXT_HANDLE context = emscripten_webgl_create_context("#canvas", &attrs);
     emscripten_webgl_make_context_current(context);
 
+    //webxr_is_session_supported(WEBXR_SESSION_MODE_IMMERSIVE_VR, );
+
+
     // Test emscripten_webgl_get_supported_extensions() API
     char *extensions = emscripten_webgl_get_supported_extensions();
     assert(extensions);
@@ -108,6 +130,13 @@ int main() {
     assert(strstr(extensions, "WEBGL") != 0);
     std::cout << extensions << "Loaded extensions" << std::endl;
     free(extensions);
+
+    // Init the XR runtime
+    webxr_init(render_stereoscopic_frame,
+               xr_session_start,
+               xr_session_end,
+               xr_error,
+               NULL);
 
     renderer.init();
 
