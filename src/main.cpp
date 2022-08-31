@@ -1,5 +1,6 @@
 #include <GLES3/gl3.h>
 #include <cstdlib>
+#include <emscripten/em_asm.h>
 #include <emscripten/emscripten.h>
 #include <emscripten/html5_webgl.h>
 #include <emscripten/html5.h>
@@ -44,6 +45,11 @@ void render_stereoscopic_frame() {
 
 }
 
+void test(int mode, int supported) {
+    std::cout << mode << " " << supported << std::endl;
+
+    EM_ASM(alert($0), supported);
+}
 
 int main() {
     EmscriptenWebGLContextAttributes attrs;
@@ -53,6 +59,9 @@ int main() {
     attrs.renderViaOffscreenBackBuffer = EM_TRUE;
     EMSCRIPTEN_WEBGL_CONTEXT_HANDLE context = emscripten_webgl_create_context("#canvas", &attrs);
     emscripten_webgl_make_context_current(context);
+
+    webxr_is_session_supported(WEBXR_SESSION_MODE_IMMERSIVE_VR, test);
+
 
     // Test emscripten_webgl_get_supported_extensions() API
     char *extensions = emscripten_webgl_get_supported_extensions();
@@ -78,7 +87,7 @@ int main() {
     renderer.materials[volume_material].add_raw_shader(RawShaders::basic_vertex,
                                                        RawShaders::volumetric_fragment);
 
-    renderer.materials[volume_material].load_async_texture3D("http://localhost:6931/resources/volumes/bonsai_256x256x256_uint8.raw",
+    renderer.materials[volume_material].load_async_texture3D("https://192.168.12.1:4443/resources/volumes/bonsai_256x256x256_uint8.raw",
                                                              256,
                                                              256,
                                                              256);
