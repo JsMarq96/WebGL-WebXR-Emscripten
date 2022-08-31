@@ -41,11 +41,31 @@ void render_frame() {
     renderer.render_frame(view_proj_mat, glm::vec3{2.0f, 0.50f, 2.0f}, width, height);
 }
 
-void render_stereoscopic_frame() {
+void render_stereoscopic_frame(void *user_data,
+                               int time,
+                               WebXRRigidTransform *head_pose,
+                               WebXRView views[2],
+                               int view_count) {
 
 }
 
-void test(int mode, int supported) {
+void xr_session_start(void *user_data,
+                      int mode) {
+    std::cout << mode << "start" << std::endl;
+}
+
+void xr_session_end(void *user_data,
+                      int mode) {
+    //
+}
+
+
+
+void xr_error(void* user_data, int error) {
+    std::cout << "Error " << error << std::endl;
+}
+
+void xr_supported_session_callback(int mode, int supported) {
     std::cout << mode << " " << supported << std::endl;
 
     EM_ASM(alert($0), supported);
@@ -60,7 +80,7 @@ int main() {
     EMSCRIPTEN_WEBGL_CONTEXT_HANDLE context = emscripten_webgl_create_context("#canvas", &attrs);
     emscripten_webgl_make_context_current(context);
 
-    webxr_is_session_supported(WEBXR_SESSION_MODE_IMMERSIVE_VR, test);
+    //webxr_is_session_supported(WEBXR_SESSION_MODE_IMMERSIVE_VR, );
 
 
     // Test emscripten_webgl_get_supported_extensions() API
@@ -69,6 +89,13 @@ int main() {
     assert(strlen(extensions) > 0);
     assert(strstr(extensions, "WEBGL") != 0);
     free(extensions);
+
+    // Init the XR runtime
+    webxr_init(render_stereoscopic_frame,
+               xr_session_start,
+               xr_session_end,
+               xr_error,
+               NULL);
 
     renderer.init();
 
@@ -123,5 +150,7 @@ int main() {
     });
 
 
-    emscripten_set_main_loop(render_frame, 0, 0);
+    //emscripten_set_main_loop(render_frame, 0, 0);
+    int i;
+    //webxr_request_session(WEBXR_SESSION_MODE_IMMERSIVE_VR, WEBXR_SESSION_FEATURE_LOCAL, WEBXR_SESSION_FEATURE_LOCAL_FLOOR);
 }
