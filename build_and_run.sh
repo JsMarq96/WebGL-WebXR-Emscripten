@@ -4,4 +4,8 @@ source ./emsdk/emsdk_env.sh
 
 ./build.sh
 
-$EMSDK/upstream/emscripten/emrun build/MIX_WEBXR.html --browser chromium
+cd build
+
+openssl req -new -x509 -keyout key.pem -out server.pem -days 365 -nodes
+
+python3 ../server.py
