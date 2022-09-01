@@ -22,7 +22,7 @@ void main() {
     v_world_position = world_pos.xyz;
     v_local_position = a_pos;
     v_uv = a_uv;
-    gl_Position =  u_vp_mat * vec4(a_pos, 1.0);
+    gl_Position =  u_vp_mat * world_pos;
     v_screen_position = ((gl_Position.xy / gl_Position.w) + 1.0) / 2.0;
 }
 )";
@@ -42,12 +42,10 @@ uniform vec3 u_camera_eye_local;
 uniform highp sampler3D u_volume_map;
 uniform highp sampler2D u_frame_color_attachment;
 
-const int MAX_ITERATIONS = 100;
+const int MAX_ITERATIONS = 200;
 const float STEP_SIZE = 0.02;
 
 vec4 render_volume() {
-   vec3 back_pos = texture(u_frame_color_attachment, v_screen_position).rgb;
-
    vec3 ray_dir = normalize(u_camera_eye_local - v_local_position);
    vec3 it_pos = vec3(0.0);
    vec4 final_color = vec4(0.0);
@@ -81,8 +79,8 @@ vec4 render_volume() {
 }
 
 void main() {
-   //o_frag_color = render_volume(); //*
-   o_frag_color = vec4(1.0, 0.0, 0.0, 1.0);
+   o_frag_color = render_volume(); //*
+   //o_frag_color = vec4(1.0, 0.0, 0.0, 1.0);
 }
 )";
 

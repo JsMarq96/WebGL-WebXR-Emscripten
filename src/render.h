@@ -130,14 +130,17 @@ namespace Render {
         void render_frame(const glm::mat4x4 &view_proj_mat,
                           const glm::vec3 &cam_pos,
                           const int32_t width,
-                          const int32_t heigth);
+                          const int32_t heigth,
+                          const bool clean_frame);
 
         // Inlines
-        inline void add_drawcall_to_pass(const uint8_t pass_id,
+        inline uint8_t add_drawcall_to_pass(const uint8_t pass_id,
                                          const sDrawCall &draw_call) {
             sRenderPass &pass = render_passes[pass_id];
 
             pass.draw_stack[pass.draw_stack_size++] = draw_call;
+
+            return pass.draw_stack_size;
         }
 
         inline uint8_t add_render_pass(const eRenderPassTarget target,

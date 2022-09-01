@@ -133,7 +133,8 @@ void Render::sInstance::change_graphic_state(const sGLState &new_state) {
 void Render::sInstance::render_frame(const glm::mat4x4 &view_proj_mat,
                                      const glm::vec3 &cam_pos,
                                      const int32_t width,
-                                     const int32_t heigth) {
+                                     const int32_t heigth,
+                                     const bool clean_frame = true) {
     for(uint16_t j = 0; j < render_pass_size; j++) {
         // Bind the render pass
         sRenderPass &pass = render_passes[j];
@@ -153,7 +154,7 @@ void Render::sInstance::render_frame(const glm::mat4x4 &view_proj_mat,
         }
 
         // Celar the curent buffer
-        if (pass.clean_viewport) {
+        if (pass.clean_viewport && clean_frame) {
             glClearColor(pass.rgba_clear_values[0],
                          pass.rgba_clear_values[1],
                          pass.rgba_clear_values[2],

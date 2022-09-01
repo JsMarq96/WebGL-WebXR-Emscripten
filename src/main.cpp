@@ -14,6 +14,7 @@
 
 #include <glm/gtx/string_cast.hpp>
 #include "glm/ext/matrix_float4x4.hpp"
+#include "glm/ext/quaternion_common.hpp"
 #include "glm/gtx/dual_quaternion.hpp"
 #include "material.h"
 #include "raw_meshes.h"
@@ -35,45 +36,29 @@ void render_stereoscopic_frame(void *user_data,
                                WebXRView views[2],
                                int view_count) {
     glm::mat4x4 view;
+    glm::vec4 eye_pos;
     glm::mat4x4 view_proj;
     renderer.base_framebuffer = framebuffer_id;
 
-    glm::mat4x4 view_mat = glm::lookAt(glm::vec3{2.0f, 0.50f, 2.0f},
-                                       glm::vec3{0.0f, 0.0f ,0.0f},
-                                       glm::vec3{0.0f, 1.0f, 0.0f});
-
-   // std::cout << glm::to_string(view_mat) << " <- perfect" << std::endl;
-
-
-    glm::mat4 headest_model = glm::make_mat4(head_pose[0].matrix);
-
-    float col[2] = {0.0, 1.0f};
+    glm::mat4 headest_model = (glm::make_mat4(head_pose[0].matrix));
 
     for(uint16_t i = 0; i < 2; i++) {
-        view = headest_model * glm::inverse(glm::make_mat4(views[i].viewPose.matrix));
-        view = glm::translate(view, glm::vec3(0.0, -5.5, 0.0));
-        std::cout << glm::to_string(view) << " <- other" << std::endl;
+        view =  glm::inverse(glm::make_mat4(views[i].viewPose.matrix));
 
-        view_proj = glm::make_mat4(views[i].projectionMatrix) * view;
-
-        //renderer.current_state.set_default();
+        view_proj = (glm::make_mat4(views[i].projectionMatrix)) * view;
 
         glViewport((int)views[i].viewport[0],
                    (int)views[i].viewport[1],
                    (int)views[i].viewport[2],
                    (int)views[i].viewport[3]);
 
-            /*glClearColor(col[i], 0.0, 0.0, 1.0);
-                std::cout << i << std::endl;
-
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);*/
+        eye_pos = view * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
          renderer.render_frame(view_proj,
-                          glm::vec3{2.0f, 0.50f, 2.0f},
+                          glm::vec3(eye_pos),
                           views[i].viewport[2],
-                          views[i].viewport[3]);
-
-        //std::cout << "Frame "  << views[i].viewport[0] << " " << views[i].viewport[1] << " " << views[i].viewport[2] << " "  << views[i].viewport[3] << " "<< std::endl;
+                          views[i].viewport[3],
+                          i == 0);
     }
 }
 
@@ -98,23 +83,20 @@ void render_frame() {
                                        glm::vec3{0.0f, 0.0f ,0.0f},
                                        glm::vec3{0.0f, 1.0f, 0.0f});
 
-    float mat[] = {0.992153, 0.046731, -0.115965, 0.000000,-0.113348, 0.727629, -0.676541, 0.000000,0.052764, 0.684377, 0.727217, 0.000000,0.007016, -0.003467, 0.001067, 1.000000};
-    //view_proj_mat = glm::make_mat4(mat) * view_mat;
-
 
     glm::mat4x4 view_proj_mat = glm::perspective(glm::radians(90.0f),
                                                  (float) ((float) width / height),
                                                  0.1f,
-                                                 10000.0f) * (glm::make_mat4(mat));
+                                                 10000.0f) * view_mat;
 
-        renderer.base_framebuffer = 0;
+    renderer.base_framebuffer = 0;
 
     glViewport(0, 0, width, height);
 
     renderer.render_frame(view_proj_mat,
                           glm::vec3{2.0f, 0.50f, 2.0f},
                           width,
-                          height);
+                          height, true);
 }
 
 void xr_session_start(void *user_data,
@@ -193,7 +175,8 @@ int main() {
 
     uint8_t first_render_pass = renderer.add_render_pass(Render::SCREEN_TARGET,
                                                           0);
-    renderer.add_drawcall_to_pass(first_render_pass, {
+    uint8_t cube_draw_call = renderer.add_drawcall_to_pass(first_render_pass, {
+        .transform = {.position = glm::vec3(0.0f, 4.0f, -3.0f), .scale = {0.25f, 0.25f, 0.25f}},
         .mesh_id = cube_mesh_id,
         .material_id = volume_material,
         .call_state = {.culling_enabled = false}
