@@ -36,7 +36,7 @@ void render_stereoscopic_frame(void *user_data,
                                WebXRView views[2],
                                int view_count) {
     glm::mat4x4 view;
-    glm::vec4 eye_pos;
+    glm::vec3 eye_pos;
     glm::mat4x4 view_proj;
     renderer.base_framebuffer = framebuffer_id;
 
@@ -52,10 +52,11 @@ void render_stereoscopic_frame(void *user_data,
                    (int)views[i].viewport[2],
                    (int)views[i].viewport[3]);
 
-        eye_pos = view * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+        eye_pos = glm::vec3(glm::inverse(view)[3]);
+        std::cout << glm::to_string(eye_pos) << std::endl;
 
          renderer.render_frame(view_proj,
-                          glm::vec3(eye_pos),
+                          eye_pos,
                           views[i].viewport[2],
                           views[i].viewport[3],
                           i == 0);

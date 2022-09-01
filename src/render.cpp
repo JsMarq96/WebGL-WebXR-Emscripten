@@ -186,8 +186,8 @@ void Render::sInstance::render_frame(const glm::mat4x4 &view_proj_mat,
 
             shader.set_uniform_matrix4("u_model_mat", model);
             shader.set_uniform_matrix4("u_vp_mat", view_proj_mat);
-            shader.set_uniform_vector("u_camera_eye_local", cam_pos);
-            //shader.set_uniform_vector("u_camera_eye_local", glm::vec3(model_invert * glm::vec4(cam_pos, 1.0f)));
+            //shader.set_uniform_vector("u_camera_eye_local", cam_pos);
+            shader.set_uniform_vector("u_camera_eye_local", glm::vec3(model_invert * glm::vec4(cam_pos, 1.0f)));
 
             if (mesh.is_indexed) {
                 glDrawElements(mesh.primitive, mesh.primitive_count, GL_UNSIGNED_SHORT, 0);
