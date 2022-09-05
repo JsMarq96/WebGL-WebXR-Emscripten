@@ -77,6 +77,8 @@ namespace Render {
         uint8_t material_id;
 
         sGLState call_state;
+
+        bool enabled = true;
     };
 
     struct sMeshBuffers {
@@ -139,11 +141,11 @@ namespace Render {
         // Inlines
         inline uint8_t add_drawcall_to_pass(const uint8_t pass_id,
                                             const sDrawCall &draw_call) {
-            sRenderPass &pass = render_passes[pass_id];
+            sRenderPass *pass = &render_passes[pass_id];
 
-            pass.draw_stack[pass.draw_stack_size++] = draw_call;
+            pass->draw_stack[pass->draw_stack_size++] = draw_call;
 
-            return pass.draw_stack_size;
+            return pass->draw_stack_size;
         }
 
         inline uint8_t add_render_pass(const eRenderPassTarget target,
@@ -170,7 +172,21 @@ namespace Render {
 
         inline uint8_t get_new_transform() {
             assert(transform_count < TRANSFORMS_TOTAL_COUNT && "No more space for transforms");
+            transforms[transform_count].set_identity();
             return transform_count++;
+        }
+
+        inline void use_drawcall(const uint8_t pass_id,
+                                 const uint8_t draw_call,
+                                 const bool use) {
+            render_passes[pass_id].draw_stack[draw_call].enabled = use;
+        }
+
+
+        inline sTransform* get_transform_of_drawcall(const uint8_t pass_id,
+                                                     const uint8_t draw_call) {
+            std::cout << (int) pass_id <<  " " << (int) draw_call << " " << (int) render_passes[pass_id].draw_stack[draw_call].transform_id << std::endl;
+            return &transforms[render_passes[pass_id].draw_stack[draw_call].transform_id];
         }
 
     };

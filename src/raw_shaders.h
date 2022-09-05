@@ -99,6 +99,22 @@ void main() {
 }
 )";
 
+
+const char basic_fragment[] = R"(#version 300 es
+precision highp float;
+
+in vec2 v_uv;
+in vec3 v_world_position;
+in vec3 v_local_position;
+in vec2 v_screen_position;
+
+out vec4 o_frag_color;
+
+void main() {
+    o_frag_color = vec4(1.0, 1.0, 1.0, 1.0);
+}
+)";
+
 };
 
 #endif // RAW_SHADERS_H_

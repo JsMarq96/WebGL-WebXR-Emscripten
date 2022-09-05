@@ -8,6 +8,8 @@
 #include <glm/gtc/quaternion.hpp>
 
 
+#include <iostream>
+#include <glm/gtx/string_cast.hpp>
 struct sTransform {
     glm::vec3 position{0.0f, 0.0f, 0.0f};
     glm::vec3 scale{1.0f, 1.0f, 1.0f};
@@ -24,9 +26,10 @@ struct sTransform {
 
         glm::mat4x4 model(1.0f);
         model = glm::scale(model, scale); // Scale
-        model = model * rot_mat; // Rotate
+        model = rot_mat * model; // Rotate
         model = glm::translate(model, position); // And then transalte
 
+        std::cout << glm::to_string(scale) << std::endl;
         return model;
     }
 };

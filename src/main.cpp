@@ -21,13 +21,17 @@
 #include "raw_shaders.h"
 #include "render.h"
 #include "application.h"
+#include "transform.h"
 
 #include <iostream>
 
 #define XR_ENABLE true
 
+
 Render::sInstance renderer;
 Application::sState app_state;
+
+uint8_t first_render_pass = 0;
 
 void render_stereoscopic_frame(void *user_data,
                                int framebuffer_id,
@@ -36,16 +40,47 @@ void render_stereoscopic_frame(void *user_data,
                                WebXRView views[2],
                                int view_count) {
     // Update
+    app_state.get_current_state();
+
+
+    if (app_state.enabled_controllers[Application::LEFT_HAND]) {
+        renderer.use_drawcall(app_state.final_render_pass_id,
+                              app_state.left_controller_drawcall_id,
+                              true);
+        sTransform *controller_transf = renderer.get_transform_of_drawcall(app_state.final_render_pass_id,
+                                                                           app_state.left_controller_drawcall_id);
+        controller_transf->position = app_state.controller_position[Application::LEFT_HAND];
+
+        //std::cout << app_state.controller_position[Application::LEFT_HAND][0] << " " << app_state.controller_position[Application::LEFT_HAND][1] << std::endl;
+    } else {
+        renderer.use_drawcall(app_state.final_render_pass_id,
+                              app_state.left_controller_drawcall_id,
+                              false);
+    }
+
+    /*if (app_state.enabled_controllers[Application::RIGHT_HAND]) {
+        renderer.use_drawcall(app_state.final_render_pass_id,
+                              app_state.right_controller_drawcall_id,
+                              true);
+        sTransform &controller_transf = renderer.get_transform_of_drawcall(app_state.final_render_pass_id,
+                                                                           app_state.right_controller_drawcall_id);
+        controller_transf.position = app_state.controller_position[Application::RIGHT_HAND];
+    } else {
+        renderer.use_drawcall(app_state.final_render_pass_id,
+                              app_state.right_controller_drawcall_id,
+                              false);
+    }*/
+
 
     glm::mat4x4 view;
     glm::vec3 eye_pos;
     glm::mat4x4 view_proj;
     renderer.base_framebuffer = framebuffer_id;
 
-   // glm::mat4 headest_model = (glm::make_mat4(head_pose[0].matrix));
+    //glm::mat4 headest_model = (glm::make_mat4(head_pose[0].matrix));
 
     for(uint16_t i = 0; i < 2; i++) {
-        view =  glm::inverse(glm::make_mat4(views[i].viewPose.matrix));
+        view = glm::inverse(glm::make_mat4(views[i].viewPose.matrix));
 
         view_proj = (glm::make_mat4(views[i].projectionMatrix)) * view;
 
@@ -167,31 +202,57 @@ int main() {
     renderer.materials[volume_material].add_raw_shader(RawShaders::basic_vertex,
                                                        RawShaders::volumetric_fragment);
 
+    const uint8_t basic_material = renderer.get_new_material_id();
+    renderer.materials[basic_material].add_raw_shader(RawShaders::basic_vertex,
+                                                      RawShaders::basic_fragment);
+
     renderer.materials[volume_material].load_async_texture3D("resources/volumes/bonsai_256x256x256_uint8.raw",
                                                              256,
                                                              256,
                                                              256);
 
     // Create render pipeline
-    uint8_t first_pass_fbo_id = renderer.get_new_fbo_id();
+    //uint8_t first_pass_fbo_id = renderer.get_new_fbo_id();
 
-    uint8_t first_render_pass = renderer.add_render_pass(Render::SCREEN_TARGET,
-                                                          0);
-
-    uint8_t cube_transform_id = renderer.get_new_transform();
-    renderer.transforms[cube_transform_id] = {.position = glm::vec3(0.0f, 4.0f, -3.0f), .scale = {0.25f, 0.25f, 0.25f}};
-
-    uint8_t cube_draw_call = renderer.add_drawcall_to_pass(first_render_pass, {
-        .transform_id = cube_transform_id,
-        .mesh_id = cube_mesh_id,
-        .material_id = volume_material,
-        .call_state = {.culling_enabled = false}
-    });
-
-    //renderer.render_passes[first_render_pass].draw_stack[0].transform.position = glm::vec3(0.0, 5.0f, 0.0f);
+    app_state.final_render_pass_id = renderer.add_render_pass(Render::SCREEN_TARGET,
+                                                              0);
 
 
-    //emscripten_set_main_loop(render_frame, 0, 0);
+    //renderer.transforms[cube_transform_id] = {.position = , .scale = {0.25f, 0.25f, 0.25f}};
 
-    int i;
+    app_state.volumetric_drawcall_id = renderer.add_drawcall_to_pass(app_state.final_render_pass_id,
+                                                                     {
+                                                                     .transform_id = renderer.get_new_transform(),
+                                                                     .mesh_id = cube_mesh_id,
+                                                                     .material_id = volume_material,
+                                                                     .call_state = {.culling_enabled = false}
+                                                                 });
+    sTransform *vol_transf = renderer.get_transform_of_drawcall(app_state.final_render_pass_id,
+                                                               app_state.volumetric_drawcall_id);
+
+    //vol_transf->position = glm::vec3(0.0f, 4.0f, -3.0f);
+    //vol_transf->scale = {0.25f, 0.25f, 0.25f};
+
+    // COntroller drawcall
+    app_state.left_controller_drawcall_id = renderer.add_drawcall_to_pass(app_state.final_render_pass_id,
+                                                                          {
+                                                                              .transform_id = renderer.get_new_transform(),
+                                                                              .mesh_id = cube_mesh_id,
+                                                                              .material_id = basic_material,
+                                                                              .enabled = false
+                                                                          });
+
+    app_state.right_controller_drawcall_id = renderer.add_drawcall_to_pass(app_state.final_render_pass_id,
+                                                                          {
+                                                                              .transform_id = renderer.get_new_transform(),
+                                                                              .mesh_id = cube_mesh_id,
+                                                                              .material_id = basic_material,
+                                                                              .enabled = false
+                                                                          });
+
+    renderer.get_transform_of_drawcall(app_state.final_render_pass_id,
+                                       app_state.left_controller_drawcall_id)->scale = {0.05f, 0.05f, 0.05f};
+
+    renderer.get_transform_of_drawcall(app_state.final_render_pass_id,
+                                       app_state.right_controller_drawcall_id)->scale = {0.05f, 0.05f, 0.05f};
 }

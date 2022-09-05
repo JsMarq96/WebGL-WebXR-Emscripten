@@ -12,10 +12,18 @@ namespace Application {
     };
 
     struct sState {
-        // Controller state
+        // CONTROLLER STATE ============
         bool enabled_controllers[TOTAL_CONTROLLER_COUNT];
-        glm::mat4x4 controller_model[TOTAL_CONTROLLER_COUNT];
+        glm::vec3 controller_position[TOTAL_CONTROLLER_COUNT];
+        glm::quat controller_rotation[TOTAL_CONTROLLER_COUNT];
         // TODO add controller key state
+
+
+        // APPLICATION STATE ==========
+        uint8_t final_render_pass_id = 0;
+        uint8_t volumetric_drawcall_id = 0;
+        uint8_t left_controller_drawcall_id = 0;
+        uint8_t right_controller_drawcall_id = 0;
 
 
         void get_current_state();

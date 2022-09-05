@@ -25,7 +25,8 @@ void Application::sState::get_current_state() {
         // Enable the controller for this frame
         enabled_controllers[controllers[i].handedness] = true;
 
-        controller_model[controllers[i].handedness] = glm::make_mat4(transf.matrix);
+        controller_position[controllers[i].handedness] = glm::make_vec3(transf.position);
+        // TODO quaternion
     }
 
     // TODO: controller inputs
