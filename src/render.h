@@ -6,6 +6,7 @@
 #include "material.h"
 #include "fbo.h"
 
+#define TRANSFORMS_TOTAL_COUNT 20
 #define SHADER_TOTAL_COUNT 10
 #define MESH_TOTAL_COUNT 20
 #define MATERIAL_TOTAL_COUNT 30
@@ -71,7 +72,7 @@ namespace Render {
 
     // TODO: Parenting
     struct sDrawCall {
-        sTransform transform;
+        uint8_t transform_id;
         uint8_t mesh_id;
         uint8_t material_id;
 
@@ -121,6 +122,8 @@ namespace Render {
         sMaterial materials[MATERIAL_TOTAL_COUNT];
         uint8_t meshes_count = 0;
         sMeshBuffers meshes[MESH_TOTAL_COUNT];
+        uint8_t transform_count = 0;
+        sTransform transforms[TRANSFORMS_TOTAL_COUNT];
 
         uint16_t render_pass_size = 0;
         sRenderPass render_passes[RENDER_PASS_COUNT];
@@ -135,7 +138,7 @@ namespace Render {
 
         // Inlines
         inline uint8_t add_drawcall_to_pass(const uint8_t pass_id,
-                                         const sDrawCall &draw_call) {
+                                            const sDrawCall &draw_call) {
             sRenderPass &pass = render_passes[pass_id];
 
             pass.draw_stack[pass.draw_stack_size++] = draw_call;
@@ -163,6 +166,11 @@ namespace Render {
         inline uint8_t get_new_mesh_id() {
             assert(meshes_count < MESH_TOTAL_COUNT && "No more space for meshes");
             return meshes_count++;
+        }
+
+        inline uint8_t get_new_transform() {
+            assert(transform_count < TRANSFORMS_TOTAL_COUNT && "No more space for transforms");
+            return transform_count++;
         }
 
     };

@@ -175,7 +175,7 @@ void Render::sInstance::render_frame(const glm::mat4x4 &view_proj_mat,
                 material.add_color_attachment_from_fbo(fbos[render_passes[pass.color_attachment_pass_id].fbo_id]);
             }
 
-            model = draw_call.transform.get_model();
+            model = transforms[draw_call.transform_id].get_model();
             model_invert = glm::inverse(model);
 
             change_graphic_state(draw_call.call_state);

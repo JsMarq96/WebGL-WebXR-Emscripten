@@ -20,14 +20,14 @@
 #include "raw_meshes.h"
 #include "raw_shaders.h"
 #include "render.h"
-
+#include "application.h"
 
 #include <iostream>
 
 #define XR_ENABLE true
 
 Render::sInstance renderer;
-
+Application::sState app_state;
 
 void render_stereoscopic_frame(void *user_data,
                                int framebuffer_id,
@@ -35,12 +35,14 @@ void render_stereoscopic_frame(void *user_data,
                                WebXRRigidTransform *head_pose,
                                WebXRView views[2],
                                int view_count) {
+    // Update
+
     glm::mat4x4 view;
     glm::vec3 eye_pos;
     glm::mat4x4 view_proj;
     renderer.base_framebuffer = framebuffer_id;
 
-    glm::mat4 headest_model = (glm::make_mat4(head_pose[0].matrix));
+   // glm::mat4 headest_model = (glm::make_mat4(head_pose[0].matrix));
 
     for(uint16_t i = 0; i < 2; i++) {
         view =  glm::inverse(glm::make_mat4(views[i].viewPose.matrix));
@@ -53,13 +55,12 @@ void render_stereoscopic_frame(void *user_data,
                    (int)views[i].viewport[3]);
 
         eye_pos = glm::vec3(glm::inverse(view)[3]);
-        std::cout << glm::to_string(eye_pos) << std::endl;
 
-         renderer.render_frame(view_proj,
-                          eye_pos,
-                          views[i].viewport[2],
-                          views[i].viewport[3],
-                          i == 0);
+        renderer.render_frame(view_proj,
+                              eye_pos,
+                              views[i].viewport[2],
+                              views[i].viewport[3],
+                              i == 0);
     }
 }
 
@@ -176,8 +177,12 @@ int main() {
 
     uint8_t first_render_pass = renderer.add_render_pass(Render::SCREEN_TARGET,
                                                           0);
+
+    uint8_t cube_transform_id = renderer.get_new_transform();
+    renderer.transforms[cube_transform_id] = {.position = glm::vec3(0.0f, 4.0f, -3.0f), .scale = {0.25f, 0.25f, 0.25f}};
+
     uint8_t cube_draw_call = renderer.add_drawcall_to_pass(first_render_pass, {
-        .transform = {.position = glm::vec3(0.0f, 4.0f, -3.0f), .scale = {0.25f, 0.25f, 0.25f}},
+        .transform_id = cube_transform_id,
         .mesh_id = cube_mesh_id,
         .material_id = volume_material,
         .call_state = {.culling_enabled = false}
