@@ -24,13 +24,8 @@ struct sTransform {
     glm::mat4x4 get_model() {
         glm::mat4x4 rot_mat = glm::mat4_cast(rotation);
 
-        glm::mat4x4 model(1.0f);
-        model = glm::scale(model, scale); // Scale
-        model = rot_mat * model; // Rotate
-        model = glm::translate(model, position); // And then transalte
-
-        std::cout << glm::to_string(scale) << std::endl;
-        return model;
+        std::cout << glm::to_string(glm::scale(glm::translate(glm::mat4(1.0f), position), scale)) << std::endl;
+        return glm::scale(glm::translate(glm::mat4(1.0f), position), scale);
     }
 };
 

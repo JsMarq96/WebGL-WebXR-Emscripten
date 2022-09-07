@@ -6,7 +6,7 @@
 
 #include <iostream>
 
-void Application::sState::get_current_state() {
+void Application::sInstance::get_current_state() {
     WebXRInputSource controllers[2];
     int controller_count = 0;
 
@@ -21,6 +21,9 @@ void Application::sState::get_current_state() {
     WebXRRigidTransform transf;
     for(uint8_t i = 0; i < controller_count; i++) {
         webxr_get_input_pose(&controllers[i], &transf);
+
+        std::cout << "COntroller count" << controllers[i].handedness << std::endl;
+
 
         // Enable the controller for this frame
         enabled_controllers[controllers[i].handedness] = true;

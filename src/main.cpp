@@ -1,4 +1,5 @@
 #include <GLES3/gl3.h>
+#include <cstdint>
 #include <cstdlib>
 #include <emscripten/em_asm.h>
 #include <emscripten/emscripten.h>
@@ -29,7 +30,7 @@
 
 
 Render::sInstance renderer;
-Application::sState app_state;
+Application::sInstance app_state;
 
 uint8_t first_render_pass = 0;
 
@@ -43,33 +44,29 @@ void render_stereoscopic_frame(void *user_data,
     app_state.get_current_state();
 
 
-    if (app_state.enabled_controllers[Application::LEFT_HAND]) {
-        renderer.use_drawcall(app_state.final_render_pass_id,
-                              app_state.left_controller_drawcall_id,
-                              true);
-        sTransform *controller_transf = renderer.get_transform_of_drawcall(app_state.final_render_pass_id,
-                                                                           app_state.left_controller_drawcall_id);
-        controller_transf->position = app_state.controller_position[Application::LEFT_HAND];
+    // Controller UI
+    for(uint8_t controller_index = 0; controller_index < 2; controller_index++) {
+        if (app_state.enabled_controllers[controller_index]) {
+            renderer.use_drawcall(app_state.final_render_pass_id,
+                                  app_state.controller_drawcalls[controller_index],
+                                  true);
+            sTransform controller_transf;
 
-        //std::cout << app_state.controller_position[Application::LEFT_HAND][0] << " " << app_state.controller_position[Application::LEFT_HAND][1] << std::endl;
-    } else {
-        renderer.use_drawcall(app_state.final_render_pass_id,
-                              app_state.left_controller_drawcall_id,
-                              false);
+            controller_transf.position = app_state.controller_position[controller_index];
+            controller_transf.scale = {0.05f, 0.05f, 0.05f};
+
+            renderer.set_transform_of_drawcall(app_state.final_render_pass_id,
+                                               app_state.controller_drawcalls[controller_index],
+                                               controller_transf);
+
+            //std::cout << app_state.controller_position[Application::LEFT_HAND][0] << " " << app_state.controller_position[Application::LEFT_HAND][1] << std::endl;
+        } else {
+            renderer.use_drawcall(app_state.final_render_pass_id,
+                                  app_state.controller_drawcalls[controller_index],
+                                  false);
+        }
+
     }
-
-    /*if (app_state.enabled_controllers[Application::RIGHT_HAND]) {
-        renderer.use_drawcall(app_state.final_render_pass_id,
-                              app_state.right_controller_drawcall_id,
-                              true);
-        sTransform &controller_transf = renderer.get_transform_of_drawcall(app_state.final_render_pass_id,
-                                                                           app_state.right_controller_drawcall_id);
-        controller_transf.position = app_state.controller_position[Application::RIGHT_HAND];
-    } else {
-        renderer.use_drawcall(app_state.final_render_pass_id,
-                              app_state.right_controller_drawcall_id,
-                              false);
-    }*/
 
 
     glm::mat4x4 view;
@@ -220,39 +217,43 @@ int main() {
 
     //renderer.transforms[cube_transform_id] = {.position = , .scale = {0.25f, 0.25f, 0.25f}};
 
+    sTransform vol_transf;
+
+    vol_transf.position = glm::vec3(0.0f, 1.0f, -0.60f);
+    vol_transf.scale = {0.25f, 0.25f, 0.25f};
+
     app_state.volumetric_drawcall_id = renderer.add_drawcall_to_pass(app_state.final_render_pass_id,
                                                                      {
-                                                                     .transform_id = renderer.get_new_transform(),
                                                                      .mesh_id = cube_mesh_id,
                                                                      .material_id = volume_material,
+                                                                     .transform = vol_transf,
                                                                      .call_state = {.culling_enabled = false}
                                                                  });
-    sTransform *vol_transf = renderer.get_transform_of_drawcall(app_state.final_render_pass_id,
-                                                               app_state.volumetric_drawcall_id);
 
-    //vol_transf->position = glm::vec3(0.0f, 4.0f, -3.0f);
-    //vol_transf->scale = {0.25f, 0.25f, 0.25f};
+
 
     // COntroller drawcall
-    app_state.left_controller_drawcall_id = renderer.add_drawcall_to_pass(app_state.final_render_pass_id,
+    app_state.controller_drawcalls[Application::RIGHT_HAND] = renderer.add_drawcall_to_pass(app_state.final_render_pass_id,
                                                                           {
-                                                                              .transform_id = renderer.get_new_transform(),
                                                                               .mesh_id = cube_mesh_id,
                                                                               .material_id = basic_material,
+                                                                              .call_state = {.depth_function = GL_ALWAYS},
                                                                               .enabled = false
                                                                           });
 
-    app_state.right_controller_drawcall_id = renderer.add_drawcall_to_pass(app_state.final_render_pass_id,
-                                                                          {
-                                                                              .transform_id = renderer.get_new_transform(),
+    app_state.controller_drawcalls[Application::LEFT_HAND] = renderer.add_drawcall_to_pass(app_state.final_render_pass_id,
+                                                                           {
                                                                               .mesh_id = cube_mesh_id,
                                                                               .material_id = basic_material,
+                                                                              .call_state = {.depth_function = GL_ALWAYS},
                                                                               .enabled = false
                                                                           });
 
-    renderer.get_transform_of_drawcall(app_state.final_render_pass_id,
+    /*renderer.get_transform_of_drawcall(app_state.final_render_pass_id,
                                        app_state.left_controller_drawcall_id)->scale = {0.05f, 0.05f, 0.05f};
 
     renderer.get_transform_of_drawcall(app_state.final_render_pass_id,
-                                       app_state.right_controller_drawcall_id)->scale = {0.05f, 0.05f, 0.05f};
+                                       app_state.right_controller_drawcall_id)->scale = {0.05f, 0.05f, 0.05f};*/
+
+    int i;
 }

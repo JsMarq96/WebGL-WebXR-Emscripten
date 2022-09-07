@@ -6,7 +6,6 @@
 #include "material.h"
 #include "fbo.h"
 
-#define TRANSFORMS_TOTAL_COUNT 20
 #define SHADER_TOTAL_COUNT 10
 #define MESH_TOTAL_COUNT 20
 #define MATERIAL_TOTAL_COUNT 30
@@ -72,9 +71,10 @@ namespace Render {
 
     // TODO: Parenting
     struct sDrawCall {
-        uint8_t transform_id;
         uint8_t mesh_id;
         uint8_t material_id;
+
+        sTransform transform;
 
         sGLState call_state;
 
@@ -124,8 +124,6 @@ namespace Render {
         sMaterial materials[MATERIAL_TOTAL_COUNT];
         uint8_t meshes_count = 0;
         sMeshBuffers meshes[MESH_TOTAL_COUNT];
-        uint8_t transform_count = 0;
-        sTransform transforms[TRANSFORMS_TOTAL_COUNT];
 
         uint16_t render_pass_size = 0;
         sRenderPass render_passes[RENDER_PASS_COUNT];
@@ -170,25 +168,22 @@ namespace Render {
             return meshes_count++;
         }
 
-        inline uint8_t get_new_transform() {
-            assert(transform_count < TRANSFORMS_TOTAL_COUNT && "No more space for transforms");
-            transforms[transform_count].set_identity();
-            return transform_count++;
-        }
-
         inline void use_drawcall(const uint8_t pass_id,
                                  const uint8_t draw_call,
                                  const bool use) {
             render_passes[pass_id].draw_stack[draw_call].enabled = use;
         }
 
-
-        inline sTransform* get_transform_of_drawcall(const uint8_t pass_id,
-                                                     const uint8_t draw_call) {
-            std::cout << (int) pass_id <<  " " << (int) draw_call << " " << (int) render_passes[pass_id].draw_stack[draw_call].transform_id << std::endl;
-            return &transforms[render_passes[pass_id].draw_stack[draw_call].transform_id];
+        inline sDrawCall* get_draw_call(const uint8_t pass_id,
+                                        const uint8_t draw_call) {
+            return &render_passes[pass_id].draw_stack[draw_call];
         }
 
+        inline void set_transform_of_drawcall(const uint8_t pass_id,
+                                              const uint8_t draw_call,
+                                              const sTransform &transf) {
+            render_passes[pass_id].draw_stack[draw_call].transform = transf;
+        }
     };
 
 };
