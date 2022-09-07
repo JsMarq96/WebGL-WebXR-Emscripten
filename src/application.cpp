@@ -22,14 +22,16 @@ void Application::sInstance::get_current_state() {
     for(uint8_t i = 0; i < controller_count; i++) {
         webxr_get_input_pose(&controllers[i], &transf);
 
-        std::cout << "COntroller count" << controllers[i].handedness << std::endl;
-
-
         // Enable the controller for this frame
         enabled_controllers[controllers[i].handedness] = true;
 
+        float formated_quat[4] = {transf.orientation[3],
+                                                                         transf.orientation[0],
+                                                                         transf.orientation[1],
+                                                                         transf.orientation[2]};
+
         controller_position[controllers[i].handedness] = glm::make_vec3(transf.position);
-        // TODO quaternion
+        controller_rotation[controllers[i].handedness] = glm::make_quat(formated_quat);
     }
 
     // TODO: controller inputs

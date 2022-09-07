@@ -53,6 +53,7 @@ void render_stereoscopic_frame(void *user_data,
             sTransform controller_transf;
 
             controller_transf.position = app_state.controller_position[controller_index];
+            controller_transf.rotation = app_state.controller_rotation[controller_index];
             controller_transf.scale = {0.05f, 0.05f, 0.05f};
 
             renderer.set_transform_of_drawcall(app_state.final_render_pass_id,
@@ -248,12 +249,4 @@ int main() {
                                                                               .call_state = {.depth_function = GL_ALWAYS},
                                                                               .enabled = false
                                                                           });
-
-    /*renderer.get_transform_of_drawcall(app_state.final_render_pass_id,
-                                       app_state.left_controller_drawcall_id)->scale = {0.05f, 0.05f, 0.05f};
-
-    renderer.get_transform_of_drawcall(app_state.final_render_pass_id,
-                                       app_state.right_controller_drawcall_id)->scale = {0.05f, 0.05f, 0.05f};*/
-
-    int i;
 }
