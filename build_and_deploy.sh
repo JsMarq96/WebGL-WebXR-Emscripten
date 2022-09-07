@@ -13,6 +13,9 @@ emcmake cmake ..
 
 make
 
-git add index.* resources/*
+rm ../../JsMarq96.github.io/*
+cp index* ../../JsMarq96.github.io/
+cd ../../JsMarq96.github.io/
+git add *
 git commit -m "Deploy"
 git push --set-upstream origin master
