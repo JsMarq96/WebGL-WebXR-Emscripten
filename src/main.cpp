@@ -23,6 +23,7 @@
 #include "render.h"
 #include "application.h"
 #include "transform.h"
+#include "collision_detection.h"
 
 #include <iostream>
 
@@ -69,6 +70,13 @@ void render_stereoscopic_frame(void *user_data,
 
     }
 
+    // Test head inside volume
+    glm::vec3 head_position = glm::make_vec3(head_pose->position);
+
+    std::cout << COL_DET::sphere_OBB_collision(renderer.get_draw_call(app_state.final_render_pass_id,
+                                                                      app_state.volumetric_drawcall_id)->transform,
+                                               head_position,
+                                               0.10f) << " Collision detect" <<  std::endl;
 
     glm::mat4x4 view;
     glm::vec3 eye_pos;

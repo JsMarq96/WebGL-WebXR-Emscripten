@@ -7,7 +7,7 @@
 
 #include "transform.h"
 
-namespace COLISION_DET {
+namespace COL_DET {
 
     inline void project_vertices_to_axis(const glm::vec3 &axis,
                                          const glm::vec3 *vertices,
