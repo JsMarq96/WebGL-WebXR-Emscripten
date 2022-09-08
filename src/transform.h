@@ -26,6 +26,15 @@ struct sTransform {
 
         return glm::scale(glm::translate(glm::mat4(1.0f), position) * rot_mat, scale);
     }
+
+    glm::vec3 rotate_vector(const glm::vec3 &vec) const {
+        // Use hamiltonian product
+        glm::quat P = {0.0f, vec.x, vec.y, vec.z};
+        glm::quat rotation_neg = {rotation.w, -rotation.x, -rotation.y, -rotation.z};
+        glm::quat rot_vec = rotation * P * rotation_neg;
+
+        return {rot_vec.x, rot_vec.y, rot_vec.z};
+    }
 };
 
 #endif // TRANSFORM_H_

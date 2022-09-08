@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <glm/glm.hpp>
 
+#include "glm/gtx/string_cast.hpp"
 #include "transform.h"
 
 namespace COL_DET {
@@ -19,7 +20,7 @@ namespace COL_DET {
 
         for(uint16_t i = 0; i < vertices_count; i++) {
             float facing = glm::dot(axis,
-                                    vertices[0]);
+                                    vertices[i]);
 
             min_it = glm::min(min_it,
                               facing);
@@ -57,19 +58,21 @@ namespace COL_DET {
         // SAT test
         for(uint16_t i = 0; i < 3; i++) {
             // Test each axis
+            axis[i] = OBB_transform.rotate_vector(axis[i]);
 
             // Get box projection
             float box_max_on_axis = 0.0f, box_min_on_axis = 0.0f;
 
             project_vertices_to_axis(axis[i],
-                                     NULL,
-                                     0,
+                                     box_vertices,
+                                     8,
                                      &box_min_on_axis,
                                      &box_max_on_axis);
 
             // Get sphere projection
             float sphere_center_on_axis = glm::dot(sphere_center,
                                                    axis[i]);
+
 
             float sphere_max_on_axis = sphere_center_on_axis + sphere_radius;
             float sphere_min_on_axis = sphere_center_on_axis - sphere_radius;

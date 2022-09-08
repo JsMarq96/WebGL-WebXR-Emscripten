@@ -141,9 +141,9 @@ namespace Render {
                                             const sDrawCall &draw_call) {
             sRenderPass *pass = &render_passes[pass_id];
 
-            pass->draw_stack[pass->draw_stack_size++] = draw_call;
+            pass->draw_stack[pass->draw_stack_size] = draw_call;
 
-            return pass->draw_stack_size;
+            return pass->draw_stack_size++;
         }
 
         inline uint8_t add_render_pass(const eRenderPassTarget target,

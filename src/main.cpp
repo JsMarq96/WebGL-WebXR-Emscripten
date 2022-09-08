@@ -70,35 +70,40 @@ void render_stereoscopic_frame(void *user_data,
 
     }
 
-    // Test head inside volume
-    glm::vec3 head_position = glm::make_vec3(head_pose->position);
-
-    std::cout << COL_DET::sphere_OBB_collision(renderer.get_draw_call(app_state.final_render_pass_id,
-                                                                      app_state.volumetric_drawcall_id)->transform,
-                                               head_position,
-                                               0.10f) << " Collision detect" <<  std::endl;
-
-    glm::mat4x4 view;
-    glm::vec3 eye_pos;
     glm::mat4x4 view_proj;
     renderer.base_framebuffer = framebuffer_id;
 
-    //glm::mat4 headest_model = (glm::make_mat4(head_pose[0].matrix));
+    // Get view and eye positions
+    glm::mat4 view_mats[2];
+    glm::vec3 eye_poses[2];
+    for (uint16_t i = 0; i < 2; i++) {
+        view_mats[i] = glm::inverse(glm::make_mat4(views[i].viewPose.matrix));
+        eye_poses[i] = glm::vec3(glm::inverse(view_mats[i])[3]);
+    }
+
+    // Test head inside volume
+    Render::sDrawCall *volume_draw_call = renderer.get_draw_call(app_state.final_render_pass_id,
+                                                                 app_state.volumetric_drawcall_id);
+    if (COL_DET::sphere_OBB_collision(volume_draw_call->transform,
+                                               eye_poses[0],
+                                      0.10f)) {
+        // Render backface
+        volume_draw_call->call_state.culling_mode = GL_FRONT;
+    } else {
+        volume_draw_call->call_state.culling_mode = GL_BACK;
+    }
+
 
     for(uint16_t i = 0; i < 2; i++) {
-        view = glm::inverse(glm::make_mat4(views[i].viewPose.matrix));
-
-        view_proj = (glm::make_mat4(views[i].projectionMatrix)) * view;
+        view_proj = (glm::make_mat4(views[i].projectionMatrix)) * view_mats[i];
 
         glViewport((int)views[i].viewport[0],
                    (int)views[i].viewport[1],
                    (int)views[i].viewport[2],
                    (int)views[i].viewport[3]);
 
-        eye_pos = glm::vec3(glm::inverse(view)[3]);
-
         renderer.render_frame(view_proj,
-                              eye_pos,
+                              eye_poses[i],
                               views[i].viewport[2],
                               views[i].viewport[3],
                               i == 0);
