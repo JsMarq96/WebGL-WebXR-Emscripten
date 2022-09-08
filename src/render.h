@@ -104,7 +104,7 @@ namespace Render {
 
         eRenderPassTarget target = SCREEN_TARGET;
 
-        bool use_prev_color_attachment = false;
+        bool use_color_attachment = false;
         uint8_t color_attachment_pass_id = 0;
 
         uint8_t fbo_id;
@@ -150,6 +150,18 @@ namespace Render {
                                        const uint8_t fbo_id) {
             render_passes[render_pass_size].target = target;
             render_passes[render_pass_size].fbo_id = fbo_id;
+            return render_pass_size++;
+        }
+
+        inline uint8_t add_render_pass(const eRenderPassTarget target,
+                                       const uint8_t fbo_id,
+                                       const uint8_t input_fbo) {
+            render_passes[render_pass_size].target = target;
+            render_passes[render_pass_size].fbo_id = fbo_id;
+
+            render_passes[render_pass_size].use_color_attachment = true;
+            render_passes[render_pass_size].color_attachment_pass_id = input_fbo;
+
             return render_pass_size++;
         }
 

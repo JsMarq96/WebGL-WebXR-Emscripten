@@ -23,6 +23,7 @@ namespace Application {
         // TODO add controller key state
 
         // APPLICATION STATE ==========
+        uint8_t first_render_pass_id = 0;
         uint8_t final_render_pass_id = 0;
         uint8_t volumetric_drawcall_id = 0;
         uint8_t left_controller_drawcall_id = 0;

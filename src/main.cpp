@@ -55,13 +55,11 @@ void render_stereoscopic_frame(void *user_data,
 
             controller_transf.position = app_state.controller_position[controller_index];
             controller_transf.rotation = app_state.controller_rotation[controller_index];
-            controller_transf.scale = {0.05f, 0.05f, 0.05f};
+            controller_transf.scale = {0.025f, 0.025f, 0.025f};
 
             renderer.set_transform_of_drawcall(app_state.final_render_pass_id,
                                                app_state.controller_drawcalls[controller_index],
                                                controller_transf);
-
-            //std::cout << app_state.controller_position[Application::LEFT_HAND][0] << " " << app_state.controller_position[Application::LEFT_HAND][1] << std::endl;
         } else {
             renderer.use_drawcall(app_state.final_render_pass_id,
                                   app_state.controller_drawcalls[controller_index],
@@ -85,7 +83,7 @@ void render_stereoscopic_frame(void *user_data,
     Render::sDrawCall *volume_draw_call = renderer.get_draw_call(app_state.final_render_pass_id,
                                                                  app_state.volumetric_drawcall_id);
     if (COL_DET::sphere_OBB_collision(volume_draw_call->transform,
-                                               eye_poses[0],
+                                      eye_poses[0],
                                       0.10f)) {
         // Render backface
         volume_draw_call->call_state.culling_mode = GL_FRONT;
@@ -223,18 +221,27 @@ int main() {
                                                              256);
 
     // Create render pipeline
-    //uint8_t first_pass_fbo_id = renderer.get_new_fbo_id();
+    uint8_t first_pass_fbo_id = renderer.get_new_fbo_id();
 
+    //app_state.first_render_pass_id = renderer.add_render_pass(Render::FBO_TARGET,
+    //                                                          first_pass_fbo_id);
     app_state.final_render_pass_id = renderer.add_render_pass(Render::SCREEN_TARGET,
-                                                              0);
-
-
-    //renderer.transforms[cube_transform_id] = {.position = , .scale = {0.25f, 0.25f, 0.25f}};
+                                                              0,
+                                                              first_pass_fbo_id);
 
     sTransform vol_transf;
 
     vol_transf.position = glm::vec3(0.0f, 1.0f, -0.60f);
     vol_transf.scale = {0.25f, 0.25f, 0.25f};
+
+    // First pass, for the volumes
+    /*renderer.add_drawcall_to_pass(app_state.first_render_pass_id,
+                                  { .mesh_id = cube_mesh_id,
+                                    .material_id = first_pass_material_id,
+                                    .transform = vol_transf,
+                                    .call_state = {.culling_mode = GL_BACK }
+                                 });*/
+
 
     app_state.volumetric_drawcall_id = renderer.add_drawcall_to_pass(app_state.final_render_pass_id,
                                                                      {

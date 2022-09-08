@@ -129,7 +129,6 @@ void Render::sInstance::change_graphic_state(const sGLState &new_state) {
     }
 }
 
-#include <iostream>
 void Render::sInstance::render_frame(const glm::mat4x4 &view_proj_mat,
                                      const glm::vec3 &cam_pos,
                                      const int32_t width,
@@ -138,6 +137,8 @@ void Render::sInstance::render_frame(const glm::mat4x4 &view_proj_mat,
     for(uint16_t j = 0; j < render_pass_size; j++) {
         // Bind the render pass
         sRenderPass &pass = render_passes[j];
+
+        std::cout << j << " " << (int) pass.use_color_attachment << std::endl;
 
         if (pass.target == FBO_TARGET) {
             sFBO &curr_fbo = fbos[pass.fbo_id];
@@ -176,7 +177,7 @@ void Render::sInstance::render_frame(const glm::mat4x4 &view_proj_mat,
             sMeshBuffers &mesh = meshes[draw_call.mesh_id];
 
 
-            if (pass.use_prev_color_attachment) {
+            if (pass.use_color_attachment) {
                 material.add_color_attachment_from_fbo(fbos[render_passes[pass.color_attachment_pass_id].fbo_id]);
             }
 
@@ -203,4 +204,6 @@ void Render::sInstance::render_frame(const glm::mat4x4 &view_proj_mat,
             material.disable();
         }
     }
+
+    std::cout << "===========" << std::endl;
 }
