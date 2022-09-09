@@ -138,8 +138,6 @@ void Render::sInstance::render_frame(const glm::mat4x4 &view_proj_mat,
         // Bind the render pass
         sRenderPass &pass = render_passes[j];
 
-        std::cout << j << " " << (int) pass.use_color_attachment << std::endl;
-
         if (pass.target == FBO_TARGET) {
             sFBO &curr_fbo = fbos[pass.fbo_id];
 
@@ -205,6 +203,4 @@ void Render::sInstance::render_frame(const glm::mat4x4 &view_proj_mat,
             material_man.disable();
         }
     }
-
-    std::cout << "===========" << std::endl;
 }

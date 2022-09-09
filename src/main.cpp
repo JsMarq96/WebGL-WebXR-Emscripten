@@ -126,9 +126,29 @@ void render_frame() {
     int width, height, lef, right;
     emscripten_get_canvas_element_size("#canvas", &width, &height);
 
+    renderer.base_framebuffer = 0;
+
+    glViewport(0, 0, width, height);
+
+    glm::vec3 eye_pos = glm::vec3{0.10f, 1.00f, 0.10f};
+
+     Render::sDrawCall *volume_draw_call = renderer.get_draw_call(app_state.final_render_pass_id,
+                                                                 app_state.volumetric_drawcall_id);
+
+    if (COL_DET::sphere_OBB_collision(volume_draw_call->transform,
+                                      eye_pos,
+                                      0.10f)) {
+        // Render backface
+        volume_draw_call->call_state.culling_mode = GL_FRONT;
+        volume_draw_call->material_id = app_state.volume_material_inside;
+    } else {
+        volume_draw_call->call_state.culling_mode = GL_BACK;
+        volume_draw_call->material_id = app_state.volume_material_outside;
+    }
+
     glm::mat4x4 persp;
-    glm::mat4x4 view_mat = glm::lookAt(glm::vec3{2.0f, 0.50f, 2.0f},
-                                       glm::vec3{0.0f, 0.0f ,0.0f},
+    glm::mat4x4 view_mat = glm::lookAt(eye_pos,
+                                       volume_draw_call->transform.position,
                                        glm::vec3{0.0f, 1.0f, 0.0f});
 
 
@@ -137,12 +157,9 @@ void render_frame() {
                                                  0.1f,
                                                  10000.0f) * view_mat;
 
-    renderer.base_framebuffer = 0;
-
-    glViewport(0, 0, width, height);
 
     renderer.render_frame(view_proj_mat,
-                          glm::vec3{2.0f, 0.50f, 2.0f},
+                          eye_pos,
                           width,
                           height, true);
 }
@@ -268,4 +285,8 @@ int main() {
                                                                               .call_state = {.depth_function = GL_ALWAYS},
                                                                               .enabled = false
                                                                           });
+
+    emscripten_set_main_loop(render_frame,
+                             0,
+                             0);
 }
