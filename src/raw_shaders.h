@@ -56,7 +56,7 @@ vec4 render_volume() {
       if (final_color.a >= 0.95) {
          break;
       }
-      vec3 sample_pos = ((v_local_position + u_camera_eye_local - it_pos) / 2.0) + 0.5;
+      vec3 sample_pos = ((v_local_position + (u_camera_eye_local + 0.5) - it_pos) / 2.0) + 0.5;
 
       // Aboid clipping outside
       if (sample_pos.x < 0.0 || sample_pos.y < 0.0 || sample_pos.z < 0.0) {
@@ -139,8 +139,8 @@ vec4 render_volume() {
 
 void main() {
    //o_frag_color = v_local_position;
-   //o_frag_color = render_volume(); //*
-   o_frag_color = vec4(v_local_position / 2.0 + 0.5, 1.0);
+   o_frag_color = render_volume(); //*
+   //o_frag_color = vec4(v_local_position / 2.0 + 0.5, 1.0);
    //o_frag_color = texture(u_frame_color_attachment, v_screen_position);
 }
 )";

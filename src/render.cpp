@@ -172,13 +172,14 @@ void Render::sInstance::render_frame(const glm::mat4x4 &view_proj_mat,
                 continue;
             }
 
-            sMaterial &material = materials[draw_call.material_id];
-            sShader &shader = material.shader;
+            sMaterialInstance &material = material_man.materials[draw_call.material_id];
+            sShader &shader = material_man.shaders[material.shader_id];
             sMeshBuffers &mesh = meshes[draw_call.mesh_id];
 
 
             if (pass.use_color_attachment) {
-                material.add_color_attachment_from_fbo(fbos[render_passes[pass.color_attachment_pass_id].fbo_id]);
+                material_man.add_color_attachment_from_fbo(draw_call.material_id,
+                                                           fbos[render_passes[pass.color_attachment_pass_id].fbo_id]);
             }
 
             model = draw_call.transform.get_model();
@@ -186,7 +187,7 @@ void Render::sInstance::render_frame(const glm::mat4x4 &view_proj_mat,
 
             change_graphic_state(draw_call.call_state);
 
-            material.enable();
+            material_man.enable(draw_call.material_id);
 
             glBindVertexArray(mesh.VAO);
 
@@ -201,7 +202,7 @@ void Render::sInstance::render_frame(const glm::mat4x4 &view_proj_mat,
                 glDrawArrays(mesh.primitive, 0, mesh.primitive_count);
             }
 
-            material.disable();
+            material_man.disable();
         }
     }
 

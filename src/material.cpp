@@ -6,35 +6,37 @@
 #include <emscripten.h>
 #endif
 
-void sMaterial::add_shader(const char     *vertex_shader,
+uint8_t sMaterialManager::add_shader(const char     *vertex_shader,
                            const char     *fragment_shader) {
-    shader.load_file_shaders(vertex_shader,
-                             fragment_shader);
+    shaders[shader_count].load_file_shaders(vertex_shader,
+                                            fragment_shader);
+
+    return shader_count++;
 }
 
-void sMaterial::add_raw_shader(const char     *vertex_shader,
+ uint8_t sMaterialManager::add_raw_shader(const char     *vertex_shader,
                            const char     *fragment_shader) {
-    shader.load_shaders(vertex_shader,
-                        fragment_shader);
+    shaders[shader_count].load_shaders(vertex_shader,
+                                       fragment_shader);
+    return shader_count++;
 }
 
-
-void sMaterial::add_texture(const char*           text_dir,
-                            const eTextureType   text_type) {
-    enabled_textures[text_type] = true;
-    textures[text_type].load( eTextureType::STANDART_2D,
-                              false,
-                              text_dir);
+ uint8_t sMaterialManager::add_texture(const char*           text_dir) {
+    textures[texture_count].load( eTextureType::STANDART_2D,
+                                  false,
+                                  text_dir);
+    return texture_count++;
 }
 
 // TODO: this is kinda messy... refactor to sTexture??
-void sMaterial::add_raw_texture(const char* raw_data,
+void sMaterialManager::add_raw_texture(const char* raw_data,
                                 const size_t width,
                                 const size_t height,
                                 const GLenum format,
                                 const GLenum type,
                                 const eTextureType text_type) {
-    enabled_textures[text_type] = true;
+   // enabled_textures[text_type] = true;
+    assert(false && "TODO Add raw texture to material");
 
     assert(raw_data != NULL && "Uploading empty texture to GPU");
 
@@ -63,44 +65,42 @@ void sMaterial::add_raw_texture(const char* raw_data,
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void sMaterial::add_cubemap_texture(const char   *text_dir) {
-    enabled_textures[COLOR_MAP] = true;
+void sMaterialManager::add_cubemap_texture(const char   *text_dir) {
+    //enabled_textures[COLOR_MAP] = true;
+    assert(false && "TODO add cubemap texture to the material");
     textures[COLOR_MAP].load(eTextureType::CUBEMAP,
                              false,
                              text_dir);
 }
 
-void sMaterial::add_volume_texture(const char* text_dir,
+void sMaterialManager::add_volume_texture(const char* text_dir,
                                    const uint16_t tile_width,
                                    const uint16_t tile_heigth,
                                    const uint16_t tile_depth) {
-    enabled_textures[VOLUME_MAP] = true;
+    //enabled_textures[VOLUME_MAP] = true;
+    assert(false && "TODO add volume texture from drive to material manager");
     textures[VOLUME_MAP].load3D(text_dir,
                                 tile_width,
                                 tile_heigth,
                                 tile_depth);
 }
 
-void sMaterial::add_sphere_volume(const uint16_t size) {
-    enabled_textures[VOLUME_MAP] = true;
-    textures[VOLUME_MAP].load_sphere_volume(size);
-}
 
 
 #include <iostream>
- void sMaterial::load_async_texture3D(const char* dir,
+ uint8_t sMaterialManager::load_async_texture3D(const char* dir,
                                       const uint16_t width,
                                       const uint16_t heigth,
                                       const uint16_t depth) {
 #ifdef __EMSCRIPTEN__
-    sTexture *text = &textures[VOLUME_MAP];
+    sTexture *text = &textures[texture_count];
     text->width = width;
     text->height = heigth;
     text->depth = depth;
 
     text->load_empty_volume();
 
-    enabled_textures[VOLUME_MAP] = true;
+    //enabled_textures[VOLUME_MAP] = true;
 
     std::cout << "Start load of volume texture" << std::endl;
     emscripten_async_wget_data(dir,
@@ -137,6 +137,7 @@ void sMaterial::add_sphere_volume(const uint16_t size) {
 #else
     assert(false && "There is async loading of volumes on this platform yet");
 #endif
+    return texture_count++;
  }
 
 
@@ -147,25 +148,26 @@ void sMaterial::add_sphere_volume(const uint16_t size) {
  *  SPECULAR - TEXTURE 2
  *  VOLUME - Texture 3
  * */
-void sMaterial::enable() const {
-    shader.activate();
+void sMaterialManager::enable(const uint8_t material_id) const {
+    const sMaterialInstance &material = materials[material_id];
+    shaders[material.shader_id].activate();
 
     for (int texture = 0; texture < TEXTURE_MAP_TYPE_COUNT; texture++) {
-        if (!enabled_textures[texture]) {
+        if (!material.enabled_textures[texture]) {
             continue;
         }
         glActiveTexture(GL_TEXTURE0 + texture);
 
         if (texture == VOLUME_MAP) {
-            glBindTexture(GL_TEXTURE_3D, textures[texture].texture_id);
+            glBindTexture(GL_TEXTURE_3D, textures[material.texture_ids[texture]].texture_id);
         } else {
-            glBindTexture(GL_TEXTURE_2D, textures[texture].texture_id);
+            glBindTexture(GL_TEXTURE_2D,  textures[material.texture_ids[texture]].texture_id);
         }
 
-        shader.set_uniform_texture(texture_uniform_LUT[texture], texture);
+        shaders[material_id].set_uniform_texture(texture_uniform_LUT[texture], texture);
     }
 }
 
-void sMaterial::disable() const {
+void sMaterialManager::disable() const {
     //shader.disable();
 }

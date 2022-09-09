@@ -30,6 +30,9 @@ namespace Application {
         uint8_t right_controller_drawcall_id = 0;
         uint8_t controller_drawcalls[TOTAL_CONTROLLER_COUNT] = {};
 
+        uint8_t volume_material_inside = 0;
+        uint8_t volume_material_outside = 0;
+
 
         void get_current_state();
     };

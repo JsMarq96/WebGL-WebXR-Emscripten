@@ -8,6 +8,9 @@
 #include "shader.h"
 #include "fbo.h"
 
+#define MAX_TEXTURE_COUNT 15
+#define MAX_SHADER_COUNT 15
+#define MAX_MATERIAL_COUNT 15
 #define TEXTURE_SIZE 3
 
 enum eTextureMapType : int {
@@ -29,31 +32,63 @@ const char texture_uniform_LUT[TEXTURE_MAP_TYPE_COUNT][25] = {
    "u_frame_color_attachment"
 };
 
-struct sMaterial {
-    sTexture        textures[TEXTURE_MAP_TYPE_COUNT];
-    bool            enabled_textures[TEXTURE_MAP_TYPE_COUNT] = {false};
+ struct sMaterialTexConstructor {
+     union {
+         uint8_t texture_ids[TEXTURE_MAP_TYPE_COUNT];
+         struct {
+             uint8_t color_tex = 0;
+             uint8_t normal_tex = 0;
+             uint8_t specular_tex = 0;
+             uint8_t metallic_rough_tex = 0;
+             uint8_t volume_tex = 0;
+             uint8_t color_attach_tex = 0;
+         };
+     };
 
-    sShader         shader;
+     union {
+        bool            enabled_textures[TEXTURE_MAP_TYPE_COUNT];
+        struct {
+            bool enabled_color = false;
+            bool enabled_normal = false;
+            bool enabled_specular = false;
+            bool enabled_metallic_rough = false;
+            bool enabled_volume = false;
+            bool enabled_color_attach = false;
+        };
+    };
+};
 
-    void add_shader(const char     *vertex_shader,
+struct sMaterialInstance {
+    uint8_t shader_id;
+    uint8_t texture_ids[TEXTURE_MAP_TYPE_COUNT];
+    bool            enabled_textures[TEXTURE_MAP_TYPE_COUNT];
+};
+
+struct sMaterialManager {
+    sTexture        textures[MAX_TEXTURE_COUNT];
+    uint8_t         texture_count = 0;
+    sShader         shaders[MAX_TEXTURE_COUNT];
+    uint8_t         shader_count = 0;
+
+    sMaterialInstance  materials[MAX_MATERIAL_COUNT];
+    uint8_t            materials_count = 0;
+
+    uint8_t add_shader(const char     *vertex_shader,
                     const char     *fragment_shader);
-    void add_raw_shader(const char     *vertex_shader,
+    uint8_t add_raw_shader(const char     *vertex_shader,
                     const char     *fragment_shader);
-
-    void add_sphere_volume(const uint16_t size);
 
     void add_volume_texture(const char* text_dir,
                             const uint16_t tile_width,
                             const uint16_t tile_heigth,
                             const uint16_t tile_depth);
 
-    void load_async_texture3D(const char* dir,
+    uint8_t load_async_texture3D(const char* dir,
                               const uint16_t width,
                               const uint16_t heigth,
                               const uint16_t depth);
 
-    void add_texture(const char*          text_dir,
-                     const eTextureType   text_type);
+    uint8_t add_texture(const char*          text_dir);
 
     void add_raw_texture(const char* raw_data,
                          const size_t width,
@@ -64,32 +99,20 @@ struct sMaterial {
 
     void add_cubemap_texture(const char  *text_dir);
 
-    void add_color_attachment_from_fbo(const sFBO &fbo) {
-        enabled_textures[COLOR_ATTACHMENT] = true;
-        textures[COLOR_ATTACHMENT] = fbo.color_attachment;
+    void add_color_attachment_from_fbo(const uint8_t material_id,
+                                       const sFBO &fbo) {
+        materials[material_id].enabled_textures[COLOR_ATTACHMENT] = true;
+        //textures[COLOR_ATTACHMENT] = fbo.color_attachment;
     }
 
-    uint8_t get_used_textures() const {
-        uint8_t tmp = 0b0;
+    inline uint8_t add_material(const uint8_t shader_id,
+                                const sMaterialTexConstructor &mat_construct) {
+        memcpy(materials[materials_count].texture_ids, mat_construct.texture_ids, sizeof(sMaterialInstance::texture_ids));
+        memcpy(materials[materials_count].enabled_textures, mat_construct.enabled_textures, sizeof(sMaterialInstance::enabled_textures));
+        materials[materials_count].shader_id = shader_id;
 
-        if (enabled_textures[COLOR_MAP]) {
-            tmp |= 0b1;
-        }
-        if (enabled_textures[NORMAL_MAP]) {
-            tmp |= 0b10;
-        }
-        if (enabled_textures[SPECULAR_MAP]) {
-            tmp |= 0b100;
-        }
-        if (enabled_textures[METALLIC_ROUGHNESS_MAP]) {
-            tmp |= 0b1000;
-        }
-        if (enabled_textures[VOLUME_MAP]) {
-            tmp |= 0b10000;
-        }
-
-        return tmp;
-    };
+        return materials_count++;
+    }
 
 
     /**
@@ -98,7 +121,7 @@ struct sMaterial {
     *  NORMAL - Texture 1
     *  SPECULAR - TEXTURE 2
     * */
-    void enable() const;
+    void enable(const uint8_t material_id) const;
 
     void disable() const;
 };

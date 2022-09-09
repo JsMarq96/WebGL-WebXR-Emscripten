@@ -87,8 +87,10 @@ void render_stereoscopic_frame(void *user_data,
                                       0.10f)) {
         // Render backface
         volume_draw_call->call_state.culling_mode = GL_FRONT;
+        volume_draw_call->material_id = app_state.volume_material_inside;
     } else {
         volume_draw_call->call_state.culling_mode = GL_BACK;
+        volume_draw_call->material_id = app_state.volume_material_outside;
     }
 
 
@@ -161,11 +163,9 @@ void xr_error(void* user_data, int error) {
     std::cout << "Error " << error << std::endl;
 }
 
-void xr_supported_session_callback(int mode, int supported) {
-    std::cout << mode << " " << supported << std::endl;
 
-    EM_ASM(alert($0), supported);
-}
+
+
 
 int main() {
     EmscriptenWebGLContextAttributes attrs;
@@ -203,31 +203,38 @@ int main() {
                                            RawMesh::cube_indices,
                                            sizeof(RawMesh::cube_indices));
 
-    const uint8_t first_pass_material_id = renderer.get_new_material_id();
-    renderer.materials[first_pass_material_id].add_raw_shader(RawShaders::basic_vertex,
-                                                              RawShaders::local_fragment);
+    // Create shaders
+    const uint8_t inside_volume_shader = renderer.material_man.add_raw_shader(RawShaders::basic_vertex,
+                                                                              RawShaders::volumetric_fragment);
 
-    const uint8_t volume_material = renderer.get_new_material_id();
-    renderer.materials[volume_material].add_raw_shader(RawShaders::basic_vertex,
-                                                       RawShaders::volumetric_fragment);
+    const uint8_t outside_volume_shader = renderer.material_man.add_raw_shader(RawShaders::basic_vertex,
+                                                                            RawShaders::volumetric_fragment_outside);
 
-    const uint8_t basic_material = renderer.get_new_material_id();
-    renderer.materials[basic_material].add_raw_shader(RawShaders::basic_vertex,
-                                                      RawShaders::basic_fragment);
+    const uint8_t plaincolor_shaders = renderer.material_man.add_raw_shader(RawShaders::basic_vertex,
+                                                                         RawShaders::basic_fragment);
 
-    renderer.materials[volume_material].load_async_texture3D("resources/volumes/bonsai_256x256x256_uint8.raw",
-                                                             256,
-                                                             256,
-                                                             256);
+    // Load textures
+    const uint8_t volumetric_texture = renderer.material_man.load_async_texture3D("resources/volumes/bonsai_256x256x256_uint8.raw",
+                                                                               256,
+                                                                               256,
+                                                                               256);
+
+    // Define the materials with the prevousle loaded resources
+    app_state.volume_material_inside = renderer.material_man.add_material(inside_volume_shader,
+                                                                       {  .volume_tex = volumetric_texture,
+                                                                          .enabled_volume = true});
+    app_state.volume_material_outside = renderer.material_man.add_material(outside_volume_shader,
+                                                                       {  .volume_tex = volumetric_texture,
+                                                                          .enabled_volume = true});
+
+    const uint8_t basic_material = renderer.material_man.add_material(plaincolor_shaders,
+                                                                   {});
 
     // Create render pipeline
     uint8_t first_pass_fbo_id = renderer.get_new_fbo_id();
 
-    //app_state.first_render_pass_id = renderer.add_render_pass(Render::FBO_TARGET,
-    //                                                          first_pass_fbo_id);
     app_state.final_render_pass_id = renderer.add_render_pass(Render::SCREEN_TARGET,
-                                                              0,
-                                                              first_pass_fbo_id);
+                                                              0);
 
     sTransform vol_transf;
 
@@ -235,18 +242,10 @@ int main() {
     vol_transf.scale = {0.25f, 0.25f, 0.25f};
 
     // First pass, for the volumes
-    /*renderer.add_drawcall_to_pass(app_state.first_render_pass_id,
-                                  { .mesh_id = cube_mesh_id,
-                                    .material_id = first_pass_material_id,
-                                    .transform = vol_transf,
-                                    .call_state = {.culling_mode = GL_BACK }
-                                 });*/
-
-
     app_state.volumetric_drawcall_id = renderer.add_drawcall_to_pass(app_state.final_render_pass_id,
                                                                      {
                                                                      .mesh_id = cube_mesh_id,
-                                                                     .material_id = volume_material,
+                                                                     .material_id = app_state.volume_material_outside,
                                                                      .transform = vol_transf,
                                                                      .call_state = {.culling_enabled = false}
                                                                  });

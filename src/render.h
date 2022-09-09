@@ -120,10 +120,10 @@ namespace Render {
 
         uint8_t fbo_count = 0;
         sFBO fbos[FBO_TOTAL_COUNT];
-        uint8_t material_count = 0;
-        sMaterial materials[MATERIAL_TOTAL_COUNT];
         uint8_t meshes_count = 0;
         sMeshBuffers meshes[MESH_TOTAL_COUNT];
+
+        sMaterialManager material_man = {};
 
         uint16_t render_pass_size = 0;
         sRenderPass render_passes[RENDER_PASS_COUNT];
@@ -170,10 +170,6 @@ namespace Render {
             return fbo_count++;
         }
 
-        inline uint8_t get_new_material_id() {
-            assert(material_count < MATERIAL_TOTAL_COUNT && "No more space for Materials");
-            return material_count++;
-        }
 
         inline uint8_t get_new_mesh_id() {
             assert(meshes_count < MESH_TOTAL_COUNT && "No more space for meshes");
