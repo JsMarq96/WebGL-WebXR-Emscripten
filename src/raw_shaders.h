@@ -99,7 +99,8 @@ out vec4 o_frag_color;
 
 uniform vec3 u_camera_eye_local;
 uniform highp sampler3D u_volume_map;
-uniform highp sampler2D u_frame_color_attachment;
+uniform highp sampler3D u_volume_octree;
+uniform mat4 u_model_mat;
 
 const int MAX_ITERATIONS = 100;
 const float STEP_SIZE = 0.02;
@@ -179,11 +180,11 @@ void main() {
    //o_frag_color = render_volume(); //*
    //o_frag_color = vec4(v_local_position / 2.0 + 0.5, 1.0);
    //o_frag_color = texture(u_frame_color_attachment, v_screen_position);
-    vec3 ray_dir = normalize(u_camera_eye_local - v_local_position);
-    vec3 ray_origin = u_camera_eye_local;
+   vec3 ray_origin = (u_model_mat *  vec4(u_camera_eye_local, 1.0)).rgb;
+   vec3 ray_dir = normalize(ray_origin - v_world_position);
    vec3 near, far;
-   ray_AABB_intersection(ray_origin, ray_dir, vec3(0.0, 0.0, 0.0), vec3(1.0), near, far);
-   o_frag_color = vec4(far, 1.0);
+   ray_AABB_intersection(ray_origin, ray_dir, vec3(0.0, 1.0, -6.0), vec3(0.25), near, far);
+   o_frag_color = vec4(near, 1.0);
 }
 )";
 

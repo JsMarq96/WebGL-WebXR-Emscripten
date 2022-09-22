@@ -236,10 +236,10 @@ int main() {
                                                                                256,
                                                                                256);
 
-    renderer.material_man.load_async_octree_texture3D("resources/volumes/bonsai_256x256x256_uint8.raw",
-                                                      256,
-                                                      256,
-                                                      256);
+    const uint8_t volumetric_octree = renderer.material_man.load_async_octree_texture3D("resources/volumes/bonsai_256x256x256_uint8.raw",
+                                                                                        256,
+                                                                                        256,
+                                                                                        256);
 
     // Define the materials with the prevousle loaded resources
     app_state.volume_material_inside = renderer.material_man.add_material(inside_volume_shader,
@@ -247,7 +247,9 @@ int main() {
                                                                           .enabled_volume = true});
     app_state.volume_material_outside = renderer.material_man.add_material(outside_volume_shader,
                                                                        {  .volume_tex = volumetric_texture,
-                                                                          .enabled_volume = true});
+                                                                          .enabled_volume = true,
+                                                                          .volume_octree = volumetric_octree,
+                                                                          .enabled_volume_octree = true});
 
     const uint8_t basic_material = renderer.material_man.add_material(plaincolor_shaders,
                                                                    {});

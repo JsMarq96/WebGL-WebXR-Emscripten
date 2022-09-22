@@ -226,7 +226,7 @@ void sMaterialManager::enable(const uint8_t material_id) const {
         }
         glActiveTexture(GL_TEXTURE0 + texture);
 
-        if (texture == VOLUME_MAP) {
+        if (texture == VOLUME_MAP || texture == VOLUME_OCTREE) {
             glBindTexture(GL_TEXTURE_3D, textures[material.texture_ids[texture]].texture_id);
         } else {
             glBindTexture(GL_TEXTURE_2D,  textures[material.texture_ids[texture]].texture_id);
