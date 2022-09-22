@@ -104,6 +104,41 @@ uniform highp sampler2D u_frame_color_attachment;
 const int MAX_ITERATIONS = 100;
 const float STEP_SIZE = 0.02;
 
+
+void ray_AABB_intersection(in vec3 ray_origin,
+                           in vec3 ray_dir,
+                           in vec3 box_origin,
+                           in vec3 box_size,
+                           out vec3 near_intersection,
+                           out vec3 far_intersection) {
+    vec3 box_min = box_origin;
+    vec3 box_max = box_origin + box_size;
+
+    // Testing X axis slab
+    float tx1 = (box_min.x - ray_origin.x) / ray_dir.x;
+    float tx2 = (box_max.x - ray_origin.x) / ray_dir.x;
+
+    float tmin = min(tx1, tx2);
+    float tmax = max(tx1, tx2);
+
+    // Testing Y axis slab
+    float ty1 = (box_min.y - ray_origin.y) / ray_dir.y;
+    float ty2 = (box_max.y - ray_origin.y) / ray_dir.y;
+
+    tmin = max(min(ty1, ty2), tmin);
+    tmax = min(max(ty1, ty2), tmax);
+
+    // Testing Z axis slab
+    float tz1 = (box_min.z - ray_origin.z) / ray_dir.z;
+    float tz2 = (box_max.z - ray_origin.z) / ray_dir.z;
+
+    tmin = max(min(tz1, tz2), tmin);
+    tmax = min(max(tz1, tz2), tmax);
+
+    near_intersection = ray_dir * tmin + ray_origin;
+    far_intersection = ray_dir * tmax + ray_origin;
+}
+
 vec4 render_volume() {
    vec3 ray_dir = normalize(u_camera_eye_local - v_local_position);
    vec3 it_pos = vec3(0.0);
@@ -140,10 +175,15 @@ vec4 render_volume() {
 }
 
 void main() {
-   //o_frag_color = v_local_position;
-   o_frag_color = render_volume(); //*
+   o_frag_color = vec4(v_world_position.rgb, 1.0);
+   //o_frag_color = render_volume(); //*
    //o_frag_color = vec4(v_local_position / 2.0 + 0.5, 1.0);
    //o_frag_color = texture(u_frame_color_attachment, v_screen_position);
+    vec3 ray_dir = normalize(u_camera_eye_local - v_local_position);
+    vec3 ray_origin = u_camera_eye_local;
+   vec3 near, far;
+   ray_AABB_intersection(ray_origin, ray_dir, vec3(0.0, 0.0, 0.0), vec3(1.0), near, far);
+   o_frag_color = vec4(far, 1.0);
 }
 )";
 
