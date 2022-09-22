@@ -1,6 +1,8 @@
 #include "material.h"
 
 #include "texture.h"
+#include "volumetric_octree.h"
+#include <cstdint>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -140,6 +142,72 @@ void sMaterialManager::add_volume_texture(const char* text_dir,
     return texture_count++;
  }
 
+uint8_t sMaterialManager::load_async_octree_texture3D(const char* dir,
+                                                      const uint16_t width,
+                                                      const uint16_t heigth,
+                                                      const uint16_t depth) {
+   #ifdef __EMSCRIPTEN__
+    sTexture *text = &textures[texture_count];
+    text->width = width;
+    text->height = heigth;
+    text->depth = depth;
+
+    text->load_empty_volume();
+
+    std::cout << "Start load of octree volume texture" << std::endl;
+    emscripten_async_wget_data(dir,
+                               text,
+                               [](void *arg, void *buffer, int size) {
+        sTexture* curr_text = (sTexture*) arg;
+
+        // Check size
+        std::cout << "End load of volume texture & start generation octree" << std::endl;
+
+        OCTREE::sRawVolume raw_volume = {
+                        .raw_volume = (uint8_t*) buffer,
+                        .width = (uint16_t) curr_text->width,
+                        .heigth = (uint16_t) curr_text->height,
+                        .depth = (uint16_t) curr_text->depth
+        };
+
+        OCTREE::sVolumeOctree octree;
+
+        double start = emscripten_get_now();
+        OCTREE::octree_generation(raw_volume,
+                                  &octree);
+        double end = emscripten_get_now();
+        std::cout << "Time on octree gen: "<< (end - start) << std::endl;
+
+        glBindTexture(GL_TEXTURE_3D, curr_text->texture_id);
+
+        uint32_t sizet = (pow(octree.get_size_on_pixels(), 1.0f/3.0f));
+
+        glTexStorage3D(GL_TEXTURE_3D,
+                       1,
+                       GL_RGBA32UI,
+                       sizet,
+                       sizet,
+                       sizet);
+
+        glTexSubImage3D(GL_TEXTURE_3D,
+                        0, 0, 0, 0,
+                        sizet,
+                        sizet,
+                        sizet,
+                        GL_RGBA_INTEGER,
+                        GL_UNSIGNED_INT,
+                        (void*) octree.nodes);
+
+        glBindTexture(GL_TEXTURE_3D, 0);
+
+    }, NULL);
+
+#else
+    assert(false && "There is async loading of volumes on this platform yet");
+#endif
+    return texture_count++;
+
+}
 
 /**
  * Binds the textures on Opengl

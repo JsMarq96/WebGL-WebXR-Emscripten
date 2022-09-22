@@ -7,6 +7,7 @@
 #include "texture.h"
 #include "shader.h"
 #include "fbo.h"
+#include "volumetric_octree.h"
 
 #define MAX_TEXTURE_COUNT 15
 #define MAX_SHADER_COUNT 15
@@ -19,6 +20,7 @@ enum eTextureMapType : int {
     SPECULAR_MAP,
     METALLIC_ROUGHNESS_MAP,
     VOLUME_MAP,
+    VOLUME_OCTREE,
     COLOR_ATTACHMENT,
     TEXTURE_MAP_TYPE_COUNT
 };
@@ -29,6 +31,7 @@ const char texture_uniform_LUT[TEXTURE_MAP_TYPE_COUNT][25] = {
    "u_metallic_rough_map",
    "u_metallic_rough_map",
    "u_volume_map",
+   "u_volume_octree",
    "u_frame_color_attachment"
 };
 
@@ -41,6 +44,7 @@ const char texture_uniform_LUT[TEXTURE_MAP_TYPE_COUNT][25] = {
              uint8_t specular_tex = 0;
              uint8_t metallic_rough_tex = 0;
              uint8_t volume_tex = 0;
+             uint8_t volume_octree = 0;
              uint8_t color_attach_tex = 0;
          };
      };
@@ -53,6 +57,7 @@ const char texture_uniform_LUT[TEXTURE_MAP_TYPE_COUNT][25] = {
             bool enabled_specular = false;
             bool enabled_metallic_rough = false;
             bool enabled_volume = false;
+            bool enabled_volume_octree = false;
             bool enabled_color_attach = false;
         };
     };
@@ -87,6 +92,11 @@ struct sMaterialManager {
                               const uint16_t width,
                               const uint16_t heigth,
                               const uint16_t depth);
+
+    uint8_t load_async_octree_texture3D(const char* dir,
+                                        const uint16_t width,
+                                        const uint16_t heigth,
+                                        const uint16_t depth);
 
     uint8_t add_texture(const char*          text_dir);
 

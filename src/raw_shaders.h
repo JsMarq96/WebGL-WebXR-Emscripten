@@ -111,7 +111,8 @@ vec4 render_volume() {
    float ray_step = 1.0 / float(MAX_ITERATIONS);
 
    // TODO: optimize iterations size, and step size
-   for(int i = 0; i < MAX_ITERATIONS; i++) {
+   int i = 0;
+   for(; i < MAX_ITERATIONS; i++) {
       if (final_color.a >= 0.95) {
          break;
       }
@@ -134,6 +135,7 @@ vec4 render_volume() {
       it_pos = it_pos + (STEP_SIZE * ray_dir);
    }
 
+   //return vec4(vec3(i / MAX_ITERATIONS), 1.0);
    return vec4(final_color.xyz, 1.0);
 }
 
