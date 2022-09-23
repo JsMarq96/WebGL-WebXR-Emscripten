@@ -142,17 +142,29 @@ void ray_AABB_intersection(in vec3 ray_origin,
 
 const float EPSILON = 0.001;
 
-int get_octant_of_pos(in vec3 pos) {
+int get_octant_of_pos(in vec3 pos, out vec3 octant_center_delta) {
   int index = 0;
+  octant_center_delta = vec3(0.0);
   if (pos.x > EPSILON) {
     index += 1;
+    octant_center_delta.x = 1.0;
+  } else {
+    octant_center_delta.x = -1.0;
   }
   if (pos.y > EPSILON) {
    index += 2;
+   octant_center_delta.y = 1.0;
+  }  else {
+    octant_center_delta.y = -1.0;
   }
+
   if (pos.z > EPSILON) {
     index += 4;
+    octant_center_delta.z = 1.0;
+  } else {
+    octant_center_delta.z = -1.0;
   }
+
 
   return index;
 }
@@ -194,19 +206,22 @@ vec4 render_volume() {
 
 // TODO: test this in object space  and test to center the cube
 void main() {
-   o_frag_color = vec4(v_world_position.rgb, 1.0);
+   //o_frag_color = vec4(v_world_position.rgb, 1.0);
    //o_frag_color = render_volume(); //*
    //o_frag_color = vec4(v_local_position / 2.0 + 0.5, 1.0);
    //o_frag_color = texture(u_frame_color_attachment, v_screen_position);
    vec3 ray_origin = u_camera_eye_local; //(u_model_mat *  vec4(u_camera_eye_local, 1.0)).rgb;
-   vec3 ray_dir = normalize(ray_origin - v_local_position);
+   vec3 ray_dir = normalize(v_local_position - ray_origin);
    vec3 near, far, box_origin = vec3(0.0, 0.0, 0.0), box_size = vec3(1.0);
    ray_AABB_intersection(ray_origin, ray_dir, box_origin, box_size, near, far);
 
-   vec3 box_center = box_size / 2.0;
-   int octant = get_octant_of_pos(far - box_center);
-   o_frag_color = vec4(vec3(float(octant) / 7.0), 1.0);
-   //o_frag_color = vec4((far), 1.0);
+   vec3 box_center = box_size / 2.0, octant_center = vec3(0.0);
+   int octant = get_octant_of_pos(normalize(near - box_center), octant_center);
+   vec3 it_octant_center = box_center + octant_center * (box_size / 4.0);
+   int octant_of_octant = get_octant_of_pos(near - it_octant_center, octant_center);
+   o_frag_color = vec4(vec3(float(octant_of_octant) / 7.0), 1.0);
+   //o_frag_color = vec4(vec3(float(octant) / 7.0), 1.0);
+   //o_frag_color = vec4(octant_center, 1.0);
    //o_frag_color = vec4(far - box_center, 1.0);
 }
 )";
