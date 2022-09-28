@@ -182,11 +182,11 @@ void sTexture::create_empty2D_with_size(const uint32_t w,
 
     glTexImage2D(GL_TEXTURE_2D,
                  0,
-                 GL_RGBA,
+                 GL_RGBA32F,
                  w, h,
                  0,
                  GL_RGBA,
-                 GL_UNSIGNED_BYTE,
+                 GL_FLOAT,
                  NULL);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -229,3 +229,18 @@ void sTexture::load_empty_volume() {
 
     glBindTexture(GL_TEXTURE_3D, 0);
 }
+
+void sTexture::load_empty_2D() {
+    // Load empty texture
+    glGenTextures(1, &texture_id);
+
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+};

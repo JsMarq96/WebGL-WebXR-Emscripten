@@ -15,7 +15,7 @@
                 height: 100%;
             }
         </style>
-
+        <script type="text/javascript" src="https://spectorcdn.babylonjs.com/spector.bundle.js"></script>
         <!-- <script src="https://cdn.jsdelivr.net/gh/brendan-duncan/webgpu_recorder/webgpu_recorder.js"></script>
           -->
         <div class="emscripten_border">
@@ -42,6 +42,9 @@
 
              resize();
              window.addEventListener('resize', resize);
+
+           var spector = new SPECTOR.Spector();
+           spector.displayUI();
             </script>
 
         <script async type="text/javascript" src="index.js">   </script>

@@ -2,6 +2,7 @@
 
 #include "texture.h"
 #include "volumetric_octree.h"
+#include <GLES3/gl3.h>
 #include <cstdint>
 
 #ifdef __EMSCRIPTEN__
@@ -102,8 +103,6 @@ void sMaterialManager::add_volume_texture(const char* text_dir,
 
     text->load_empty_volume();
 
-    //enabled_textures[VOLUME_MAP] = true;
-
     std::cout << "Start load of volume texture" << std::endl;
     emscripten_async_wget_data(dir,
                                text,
@@ -182,21 +181,14 @@ uint8_t sMaterialManager::load_async_octree_texture3D(const char* dir,
 
         uint32_t sizet = (pow(octree.get_size_on_pixels(), 1.0f/3.0f));
 
-        glTexStorage3D(GL_TEXTURE_3D,
-                       1,
-                       GL_RGBA32UI,
-                       sizet,
-                       sizet,
-                       sizet);
-
-        glTexSubImage3D(GL_TEXTURE_3D,
-                        0, 0, 0, 0,
-                        sizet,
-                        sizet,
-                        sizet,
-                        GL_RGBA_INTEGER,
-                        GL_UNSIGNED_INT,
-                        (void*) octree.nodes);
+        glTexImage3D(GL_TEXTURE_3D,
+                     0,
+                     GL_RGBA32UI,
+                     sizet, sizet, sizet,
+                     0,
+                     GL_RGBA_INTEGER,
+                     GL_UNSIGNED_INT,
+                     (void*) octree.nodes);
 
         glBindTexture(GL_TEXTURE_3D, 0);
 

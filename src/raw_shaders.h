@@ -99,7 +99,7 @@ out vec4 o_frag_color;
 
 uniform vec3 u_camera_eye_local;
 uniform highp sampler3D u_volume_map;
-uniform highp sampler3D u_volume_octree;
+uniform highp usampler3D u_volume_octree;
 uniform mat4 u_model_mat;
 
 const int MAX_ITERATIONS = 100;
@@ -204,12 +204,38 @@ vec4 render_volume() {
    return vec4(final_color.xyz, 1.0);
 }
 
+vec3 iterate_octree(in vec3 ray_dir, in vec3 ray_origin, in vec3 box_origin, in vec3 box_size) {
+	vec3 near, far;
+   	ray_AABB_intersection(ray_origin, ray_dir, box_origin, box_size, near, far);
+
+   	vec3 box_center = (box_size/ 2.0);
+   	vec3 octant_relative_center = vec3(0.0);
+   	int octant = get_octant_of_pos(box_center, octant_relative_center);
+
+   	int base_index = 1;
+
+   	int child_index = 0;
+
+   	// Selec the important texel
+   	if (octant > 2 && octant <= 6) {
+   		// Second texel
+   		child_index += 1;
+   	} else if (octant > 6) {
+   		// Third texel, child 7
+   		child_index += 2;
+   	}
+
+   	ivec3 texel_index = ivec3(child_index % 386, (child_index / 386) % 386, child_index / (386 * 386));
+
+   	uvec4 octree_node = texelFetch(u_volume_octree, ivec3(1,0,5), 0);
+
+   	return vec3(octree_node.rgb) / 1.0;
+        return vec3(1.0);
+
+}
+
 // TODO: test this in object space  and test to center the cube
 void main() {
-   //o_frag_color = vec4(v_world_position.rgb, 1.0);
-   //o_frag_color = render_volume(); //*
-   //o_frag_color = vec4(v_local_position / 2.0 + 0.5, 1.0);
-   //o_frag_color = texture(u_frame_color_attachment, v_screen_position);
    vec3 ray_origin = u_camera_eye_local; //(u_model_mat *  vec4(u_camera_eye_local, 1.0)).rgb;
    vec3 ray_dir = normalize(v_local_position - ray_origin);
    vec3 near, far, box_origin = vec3(0.0, 0.0, 0.0), box_size = vec3(1.0);
@@ -220,9 +246,7 @@ void main() {
    vec3 it_octant_center = box_center + octant_center * (box_size / 4.0);
    int octant_of_octant = get_octant_of_pos(near - it_octant_center, octant_center);
    o_frag_color = vec4(vec3(float(octant_of_octant) / 7.0), 1.0);
-   //o_frag_color = vec4(vec3(float(octant) / 7.0), 1.0);
-   //o_frag_color = vec4(octant_center, 1.0);
-   //o_frag_color = vec4(far - box_center, 1.0);
+   //o_frag_color = vec4(iterate_octree(ray_dir, ray_origin, box_origin, box_size).rgb, 1.0);
 }
 )";
 
