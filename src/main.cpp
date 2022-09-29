@@ -9,6 +9,12 @@
 #include <webxr.h>
 #else
 // Native includes
+#include <GL/gl3w.h>
+#include <GLFW/glfw3.h>
+
+#define WIN_WIDTH	740
+#define WIN_HEIGHT	680
+#define WIN_NAME	"Volumetric-rendering vis."
 #endif
 
 #include <glm/gtc/type_ptr.hpp>
@@ -148,6 +154,9 @@ void render_frame() {
     int width, height, lef, right;
 #ifdef __EMSCRIPTEN__
     emscripten_get_canvas_element_size("#canvas", &width, &height);
+#else
+    glfwPollEvents();
+    glfwGetFramebufferSize(window, &width, &heigth);
 #endif
     renderer.base_framebuffer = 0;
 
@@ -282,9 +291,46 @@ int main() {
 }
 
 void native_main() {
+#ifndef __EMSCRIPTEN__
+    if (!glfwInit()) {
+        return EXIT_FAILURE;
+    }
+
+    // GLFW config
+    glfwSetErrorCallback(temp_error_callback);
+
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    GLFWwindow* window = glfwCreateWindow(WIN_WIDTH, WIN_HEIGHT, WIN_NAME, NULL, NULL);
+
+    glfwMakeContextCurrent(window);
+    glfwSwapInterval(1);
+
+    if (!window) {
+        std::cout << "Error, could not create window" << std::endl;
+    } else {
+        if (!gl3wInit()) {
+
+            launch_application();
+            glfwMakeContextCurrent(window);
+            while(!glfwWindowShouldClose(window)) {
+                render_frame();
+            }
+        } else {
+            std::cout << "Cannot init gl3w" << std::endl;
+        }
+    }
+    glfwDestroyWindow(window);
+    glfwTerminate();
+#else
+    assert(false && "Running native method on web enviorment!");
+#endif
 }
 
 void web_main() {
+#ifdef __EMSCRIPTEN__
     EmscriptenWebGLContextAttributes attrs;
     emscripten_webgl_init_context_attributes(&attrs);
     attrs.majorVersion = 3;
@@ -316,4 +362,7 @@ void web_main() {
     emscripten_set_main_loop(render_frame,
                              0,
                              0);
+#else
+    assert(false && "RUnning web method on native!");
+#endif
 }
