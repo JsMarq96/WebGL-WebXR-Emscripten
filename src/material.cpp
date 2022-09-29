@@ -3,6 +3,7 @@
 #include "texture.h"
 #include "volumetric_octree.h"
 #include <GLES3/gl3.h>
+#include <cstddef>
 #include <cstdint>
 
 #ifdef __EMSCRIPTEN__
@@ -145,14 +146,31 @@ uint8_t sMaterialManager::load_async_octree_texture3D(const char* dir,
                                                       const uint16_t width,
                                                       const uint16_t heigth,
                                                       const uint16_t depth) {
-   #ifdef __EMSCRIPTEN__
     sTexture *text = &textures[texture_count];
     text->width = width;
     text->height = heigth;
     text->depth = depth;
 
     text->load_empty_volume();
+    glBindTexture(GL_TEXTURE_3D, text->texture_id);
+    uint32_t test[4*64];
+        for(int i = 0; i < 4*4*4 * 4; i++) {
+            test[i] = 4294967295;
+        }
 
+        // Re-fill the texture
+        glTexImage3D(GL_TEXTURE_3D,
+                     0,
+                     GL_RGBA32UI,
+                     4,4,4,
+                     0,
+                     GL_RGBA_INTEGER,
+                     GL_UNSIGNED_BYTE,
+                     test);
+        std::cout << glGetError() << std::endl;
+    glBindTexture(GL_TEXTURE_3D, 0);
+
+#ifdef __EMSCRIPTEN__
     std::cout << "Start load of octree volume texture" << std::endl;
     emscripten_async_wget_data(dir,
                                text,
@@ -181,21 +199,21 @@ uint8_t sMaterialManager::load_async_octree_texture3D(const char* dir,
 
         uint32_t sizet = (pow(octree.get_size_on_pixels(), 1.0f/3.0f));
 
-        glTexImage3D(GL_TEXTURE_3D,
-                     0,
-                     GL_RGBA32UI,
-                     sizet, sizet, sizet,
-                     0,
-                     GL_RGBA_INTEGER,
-                     GL_UNSIGNED_INT,
-                     (void*) octree.nodes);
+        std::cout << sizet << std::endl;
+
+                sizet = 4;
+
+
+
+
+        std::cout << ((uint32_t*) octree.nodes)[0] << std::endl;
 
         glBindTexture(GL_TEXTURE_3D, 0);
 
     }, NULL);
 
 #else
-    assert(false && "There is async loading of volumes on this platform yet");
+    //assert(false && "There is async loading of volumes on this platform yet");
 #endif
     return texture_count++;
 

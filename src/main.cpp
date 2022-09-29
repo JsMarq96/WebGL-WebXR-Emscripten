@@ -1,18 +1,22 @@
+#ifdef __EMSCRIPTEN__
+// Web includes
 #include <GLES3/gl3.h>
-#include <cstdint>
-#include <cstdlib>
 #include <emscripten/em_asm.h>
 #include <emscripten/emscripten.h>
 #include <emscripten/html5_webgl.h>
 #include <emscripten/html5.h>
 #include <webgl/webgl2.h>
 #include <webxr.h>
-#include <glm/gtc/type_ptr.hpp>
+#else
+// Native includes
+#endif
 
+#include <glm/gtc/type_ptr.hpp>
 #include <cassert>
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <cstdint>
+#include <cstdlib>
 #include <glm/gtx/string_cast.hpp>
 #include "glm/ext/matrix_float4x4.hpp"
 #include "glm/ext/quaternion_common.hpp"
@@ -35,6 +39,7 @@ Application::sInstance app_state;
 
 uint8_t first_render_pass = 0;
 
+#ifdef __EMSCRIPTEN__
 void render_stereoscopic_frame(void *user_data,
                                int framebuffer_id,
                                int time,
@@ -121,11 +126,29 @@ void close_XR_session(void* userData,
 
 }
 
+void xr_session_start(void *user_data,
+                      int mode) {
+    std::cout << mode << "start" << std::endl;
+}
+
+void xr_session_end(void *user_data,
+                      int mode) {
+    //
+}
+
+
+
+void xr_error(void* user_data, int error) {
+    std::cout << "Error " << error << std::endl;
+}
+#endif
+
 
 void render_frame() {
     int width, height, lef, right;
+#ifdef __EMSCRIPTEN__
     emscripten_get_canvas_element_size("#canvas", &width, &height);
-
+#endif
     renderer.base_framebuffer = 0;
 
     glViewport(0, 0, width, height);
@@ -164,53 +187,8 @@ void render_frame() {
                           height, true);
 }
 
-void xr_session_start(void *user_data,
-                      int mode) {
-    std::cout << mode << "start" << std::endl;
-}
 
-void xr_session_end(void *user_data,
-                      int mode) {
-    //
-}
-
-
-
-void xr_error(void* user_data, int error) {
-    std::cout << "Error " << error << std::endl;
-}
-
-
-
-
-
-int main() {
-    EmscriptenWebGLContextAttributes attrs;
-    emscripten_webgl_init_context_attributes(&attrs);
-    attrs.majorVersion = 3;
-    attrs.proxyContextToMainThread = EMSCRIPTEN_WEBGL_CONTEXT_PROXY_FALLBACK;
-    attrs.renderViaOffscreenBackBuffer = EM_TRUE;
-    EMSCRIPTEN_WEBGL_CONTEXT_HANDLE context = emscripten_webgl_create_context("#canvas", &attrs);
-    emscripten_webgl_make_context_current(context);
-
-    //webxr_is_session_supported(WEBXR_SESSION_MODE_IMMERSIVE_VR, );
-
-
-    // Test emscripten_webgl_get_supported_extensions() API
-    char *extensions = emscripten_webgl_get_supported_extensions();
-    assert(extensions);
-    assert(strlen(extensions) > 0);
-    assert(strstr(extensions, "WEBGL") != 0);
-    std::cout << extensions << "Loaded extensions" << std::endl;
-    free(extensions);
-
-    // Init the XR runtime
-    webxr_init(render_stereoscopic_frame,
-               xr_session_start,
-               xr_session_end,
-               xr_error,
-               NULL);
-
+void launch_application() {
     renderer.init();
 
     // Loading assets
@@ -290,6 +268,50 @@ int main() {
                                                                               .call_state = {.depth_function = GL_ALWAYS},
                                                                               .enabled = false
                                                                           });
+}
+
+void web_main();
+void native_main();
+
+int main() {
+#ifdef __EMSCRIPTEN__
+    web_main();
+#else
+    native_main();
+#endif
+}
+
+void native_main() {
+}
+
+void web_main() {
+    EmscriptenWebGLContextAttributes attrs;
+    emscripten_webgl_init_context_attributes(&attrs);
+    attrs.majorVersion = 3;
+    attrs.proxyContextToMainThread = EMSCRIPTEN_WEBGL_CONTEXT_PROXY_FALLBACK;
+    attrs.renderViaOffscreenBackBuffer = EM_TRUE;
+    EMSCRIPTEN_WEBGL_CONTEXT_HANDLE context = emscripten_webgl_create_context("#canvas", &attrs);
+    emscripten_webgl_make_context_current(context);
+
+    //webxr_is_session_supported(WEBXR_SESSION_MODE_IMMERSIVE_VR, );
+
+
+    // Test emscripten_webgl_get_supported_extensions() API
+    char *extensions = emscripten_webgl_get_supported_extensions();
+    assert(extensions);
+    assert(strlen(extensions) > 0);
+    assert(strstr(extensions, "WEBGL") != 0);
+    std::cout << extensions << "Loaded extensions" << std::endl;
+    free(extensions);
+
+    // Init the XR runtime
+    webxr_init(render_stereoscopic_frame,
+               xr_session_start,
+               xr_session_end,
+               xr_error,
+               NULL);
+
+    launch_application();
 
     emscripten_set_main_loop(render_frame,
                              0,

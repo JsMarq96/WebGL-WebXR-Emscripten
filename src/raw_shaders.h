@@ -204,33 +204,83 @@ vec4 render_volume() {
    return vec4(final_color.xyz, 1.0);
 }
 
+uint get_next_node(in int octant, in uvec4 octree_node) {
+	uint next_node_index = 0u;
+	switch(octant) {
+		case 0: next_node_index = octree_node.g; break;
+		case 1: next_node_index = octree_node.b; break;
+		case 2: next_node_index = octree_node.a; break;
+		case 3: next_node_index = octree_node.r; break;
+		case 4: next_node_index = octree_node.g; break;
+		case 5: next_node_index = octree_node.b; break;
+		case 6: next_node_index = octree_node.a; break;
+		case 7: next_node_index = octree_node.r; break;
+	}
+
+	return next_node_index;
+}
+
+ivec3 get_texel_coords_of_index(in uint index) {
+	return ivec3(uvec3(index % 386u, (index / 386u) % 386u, index / (386u * 386u)));
+}
+
+uint get_index_of_texel_coords(in ivec3 coords) {
+	uvec3 coord = uvec3(coords);
+	return coord.x + (coord.y * 386u) + coord.z * (386u * 386u);
+}
+
+ivec3 get_child_index_at_octant(in uvec4 curr_node, in ivec3 coords, in int octant) {
+	if (octant <= 2) {
+		return get_texel_coords_of_index(get_next_node(octant, curr_node));
+	}
+	uint child_index = 0u;
+	// Selec the important texel
+	if (octant > 2 && octant <= 6) {
+       // Second texel
+	   child_index += 1u;
+	} else if (octant > 6) {
+	   // Third texel, child 7
+	   child_index += 2u;
+	}
+
+    ivec3 texel_index = get_texel_coords_of_index(get_index_of_texel_coords(coords) + child_index);
+    uvec4 octree_node = texelFetch(u_volume_octree, texel_index, 0);
+
+    return get_texel_coords_of_index(get_next_node(octant, octree_node));
+}
+
+
 vec3 iterate_octree(in vec3 ray_dir, in vec3 ray_origin, in vec3 box_origin, in vec3 box_size) {
-	vec3 near, far;
-   	ray_AABB_intersection(ray_origin, ray_dir, box_origin, box_size, near, far);
+   vec3 near, far;
+   ray_AABB_intersection(ray_origin, ray_dir, box_origin, box_size, near, far);
 
-   	vec3 box_center = (box_size/ 2.0);
-   	vec3 octant_relative_center = vec3(0.0);
-   	int octant = get_octant_of_pos(box_center, octant_relative_center);
+   vec3 box_center = (box_size/ 2.0);
+   vec3 octant_relative_center = vec3(0.0);
+   ivec3 node_coords = ivec3(0,0,0);
 
-   	int base_index = 1;
+   uvec4 octree_node = texelFetch(u_volume_octree, node_coords, 0);
 
-   	int child_index = 0;
+   for(float i = 0.0; i < 20.0; i++) {
+		if (octree_node.r == 0u) { // Full node
+			return vec3(i, 0.0, 0.0);
+		} else if (octree_node.r == 1u) { // Empty node
+			return vec3(1.0);
+		}
+		// Iterate based on the intersection octant
+		ray_AABB_intersection(ray_origin, ray_dir, box_center, box_size, near, far);
 
-   	// Selec the important texel
-   	if (octant > 2 && octant <= 6) {
-   		// Second texel
-   		child_index += 1;
-   	} else if (octant > 6) {
-   		// Third texel, child 7
-   		child_index += 2;
-   	}
+		vec3 octant_relative_center = vec3(0.0);
+		int octant = get_octant_of_pos(near - box_center, octant_relative_center);
 
-   	ivec3 texel_index = ivec3(child_index % 386, (child_index / 386) % 386, child_index / (386 * 386));
+		box_size = box_size/ 2.0;
+		box_center = box_center + octant_relative_center * (box_size / 2.0);
 
-   	uvec4 octree_node = texelFetch(u_volume_octree, ivec3(1,0,5), 0);
+		node_coords = get_child_index_at_octant(octree_node, node_coords, octant);
 
-   	return vec3(octree_node.rgb) / 1.0;
-        return vec3(1.0);
+		octree_node = texelFetch(u_volume_octree, node_coords, 0);
+	}
+
+   return vec3(0.0, 0.0, 1.0);
 
 }
 
@@ -246,6 +296,11 @@ void main() {
    vec3 it_octant_center = box_center + octant_center * (box_size / 4.0);
    int octant_of_octant = get_octant_of_pos(near - it_octant_center, octant_center);
    o_frag_color = vec4(vec3(float(octant_of_octant) / 7.0), 1.0);
+   o_frag_color = vec4(0.0, 0.0, 0.0, 1.0);
+   if (texelFetch(u_volume_octree, ivec3(0,0,0), 0).r != 0u) {
+      o_frag_color = vec4(1.0);
+    }
+    o_frag_color = vec4(texelFetch(u_volume_octree, ivec3(0,0,0), 0) / 255u);
    //o_frag_color = vec4(iterate_octree(ray_dir, ray_origin, box_origin, box_size).rgb, 1.0);
 }
 )";
