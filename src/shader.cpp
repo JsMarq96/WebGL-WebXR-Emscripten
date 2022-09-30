@@ -1,5 +1,12 @@
 #include "shader.h"
+
+#ifndef __EMSCRIPTEN__
+#include "gl3w.h"
+#include <GL/gl3w.h>
+#else
 #include <webgl/webgl2.h>
+#endif
+
 #include <iostream>
 #include <errno.h>
 #include <cstring>

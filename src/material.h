@@ -2,7 +2,6 @@
 #define MATERIAL_H_
 
 #include <cstddef>
-
 #include <cstdint>
 #include "texture.h"
 #include "shader.h"

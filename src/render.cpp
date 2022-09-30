@@ -1,13 +1,16 @@
 #include "render.h"
-#include "glm/ext/matrix_clip_space.hpp"
-#include "glm/ext/matrix_float4x4.hpp"
-#include "glm/ext/matrix_projection.hpp"
 
+#ifdef __EMSCRIPTEN__
 #include <GLES3/gl3.h>
 #include <emscripten/emscripten.h>
 #include <emscripten/html5_webgl.h>
 #include <emscripten/html5.h>
 #include <webgl/webgl2.h>
+#endif
+
+#include "glm/ext/matrix_clip_space.hpp"
+#include "glm/ext/matrix_float4x4.hpp"
+#include "glm/ext/matrix_projection.hpp"
 
 void Render::sMeshBuffers::init_with_triangles(const float *geometry,
                                                const uint32_t geometry_size,

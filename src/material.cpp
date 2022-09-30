@@ -1,14 +1,17 @@
 #include "material.h"
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#include <GLES3/gl3.h>
+#else
+#include <GL/gl3w.h>
+#endif
+
 #include "texture.h"
 #include "volumetric_octree.h"
-#include <GLES3/gl3.h>
 #include <cstddef>
 #include <cstdint>
 
-#ifdef __EMSCRIPTEN__
-#include <emscripten.h>
-#endif
 
 uint8_t sMaterialManager::add_shader(const char     *vertex_shader,
                            const char     *fragment_shader) {

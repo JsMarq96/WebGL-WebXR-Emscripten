@@ -1,14 +1,17 @@
 #include "texture.h"
-
-#include <webgl/webgl2.h>
-
-#ifdef __EMSCRIPTEN__
+#ifndef __EMSCRIPTEN__
+#include <GL/gl3w.h>
+#else
 #include <emscripten.h>
-#endif
-void upload_simple_texture_to_GPU(sTexture *text);
-
+#include <webgl/webgl2.h>
 #include <iostream>
 #include <GLES3/gl3.h>
+#endif
+
+#include <cstdlib>
+
+void upload_simple_texture_to_GPU(sTexture *text);
+
 
 void sTexture::load(const eTextureType text_type,
                     const bool istore_on_RAM,
@@ -38,7 +41,7 @@ void sTexture::load(const eTextureType text_type,
             strcat(name_buffer, cubemap_terminations[i]);
 
 #ifndef __EMSCRIPTEN__
-            raw_data = stbi_load(name_buffer, &w, &h, &l, 0);
+            //raw_data = stbi_load(name_buffer, &w, &h, &l, 0);
 #else
             raw_data = emscripten_get_preloaded_image_data(name_buffer, &w, &h);
             l = 4;
@@ -72,7 +75,7 @@ void sTexture::load(const eTextureType text_type,
     //text->raw_data = stbi_load(texture_name, &w, &h, &l, 0);
 
 #ifndef __EMSCRIPTEN__
-    raw_data = stbi_load(name_buffer, &w, &h, &l, 0);
+    //raw_data = stbi_load(name_buffer, &w, &h, &l, 0);
 #else
     raw_data = emscripten_get_preloaded_image_data(texture_name, &w, &h);
     l = 4;
@@ -136,7 +139,7 @@ void sTexture::load3D(const char* texture_name,
     //text->raw_data = stbi_load(texture_name, &w, &h, &l, 0);
 
 #ifndef __EMSCRIPTEN__
-    raw_data = stbi_load(name_buffer, &w, &h, &l, 0);
+    //raw_data = stbi_load(name_buffer, &w, &h, &l, 0);
 #else
     raw_data = emscripten_get_preloaded_image_data(texture_name, &w, &h);
     l = 4;

@@ -1,5 +1,11 @@
-#ifdef __EMSCRIPTEN__
-// Web includes
+#include <cstddef>
+#include <cstdint>
+#include <iostream>
+
+#ifndef __EMSCRIPTEN__
+#include <GL/gl3w.h>
+#include <GLFW/glfw3.h>
+#else
 #include <GLES3/gl3.h>
 #include <emscripten/em_asm.h>
 #include <emscripten/emscripten.h>
@@ -7,14 +13,6 @@
 #include <emscripten/html5.h>
 #include <webgl/webgl2.h>
 #include <webxr.h>
-#else
-// Native includes
-#include <GL/gl3w.h>
-#include <GLFW/glfw3.h>
-
-#define WIN_WIDTH	740
-#define WIN_HEIGHT	680
-#define WIN_NAME	"Volumetric-rendering vis."
 #endif
 
 #include <glm/gtc/type_ptr.hpp>
@@ -35,9 +33,10 @@
 #include "transform.h"
 #include "collision_detection.h"
 
-#include <iostream>
+#define WIN_WIDTH	740
+#define WIN_HEIGHT	680
+#define WIN_NAME	"WebGL-Vis"
 
-#define XR_ENABLE true
 
 
 Render::sInstance renderer;
@@ -147,6 +146,9 @@ void xr_session_end(void *user_data,
 void xr_error(void* user_data, int error) {
     std::cout << "Error " << error << std::endl;
 }
+#else
+
+GLFWwindow* window;
 #endif
 
 
@@ -156,7 +158,7 @@ void render_frame() {
     emscripten_get_canvas_element_size("#canvas", &width, &height);
 #else
     glfwPollEvents();
-    glfwGetFramebufferSize(window, &width, &heigth);
+    glfwGetFramebufferSize(window, &width, &height);
 #endif
     renderer.base_framebuffer = 0;
 
@@ -279,18 +281,22 @@ void launch_application() {
                                                                           });
 }
 
+
 void web_main();
-void native_main();
+int native_main();
 
 int main() {
 #ifdef __EMSCRIPTEN__
     web_main();
 #else
-    native_main();
+    return native_main();
 #endif
 }
 
-void native_main() {
+void temp_error_callback(int error_code, const char* descr);
+
+
+int native_main() {
 #ifndef __EMSCRIPTEN__
     if (!glfwInit()) {
         return EXIT_FAILURE;
@@ -303,7 +309,7 @@ void native_main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(WIN_WIDTH, WIN_HEIGHT, WIN_NAME, NULL, NULL);
+    window = glfwCreateWindow(WIN_WIDTH, WIN_HEIGHT, WIN_NAME, NULL, NULL);
 
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
@@ -312,11 +318,12 @@ void native_main() {
         std::cout << "Error, could not create window" << std::endl;
     } else {
         if (!gl3wInit()) {
-
             launch_application();
             glfwMakeContextCurrent(window);
             while(!glfwWindowShouldClose(window)) {
+                glfwPollEvents();
                 render_frame();
+                glfwSwapBuffers(window);
             }
         } else {
             std::cout << "Cannot init gl3w" << std::endl;
@@ -324,9 +331,8 @@ void native_main() {
     }
     glfwDestroyWindow(window);
     glfwTerminate();
-#else
-    assert(false && "Running native method on web enviorment!");
 #endif
+    return 0;
 }
 
 void web_main() {
@@ -365,4 +371,9 @@ void web_main() {
 #else
     assert(false && "RUnning web method on native!");
 #endif
+}
+
+// GLFW CALLBACKS =========
+void temp_error_callback(int error_code, const char* descr) {
+    std::cout << "GLFW Error: " << error_code << " " << descr << std::endl;
 }
