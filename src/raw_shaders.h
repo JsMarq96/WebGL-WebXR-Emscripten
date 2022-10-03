@@ -98,7 +98,7 @@ in vec2 v_screen_position;
 out vec4 o_frag_color;
 
 uniform vec3 u_camera_eye_local;
-uniform highp sampler3D u_volume_map;
+uniform highp usampler3D u_volume_map;
 uniform highp usampler3D u_volume_octree;
 uniform mat4 u_model_mat;
 
@@ -167,41 +167,6 @@ int get_octant_of_pos(in vec3 pos, out vec3 octant_center_delta) {
 
 
   return index;
-}
-
-vec4 render_volume() {
-   vec3 ray_dir = normalize(u_camera_eye_local - v_local_position);
-   vec3 it_pos = vec3(0.0);
-   vec4 final_color = vec4(0.0);
-   float ray_step = 1.0 / float(MAX_ITERATIONS);
-
-   // TODO: optimize iterations size, and step size
-   int i = 0;
-   for(; i < MAX_ITERATIONS; i++) {
-      if (final_color.a >= 0.95) {
-         break;
-      }
-      vec3 sample_pos = ((v_local_position - it_pos) / 2.0) + 0.5;
-
-      // Aboid clipping outside
-      if (sample_pos.x < 0.0 || sample_pos.y < 0.0 || sample_pos.z < 0.0) {
-         break;
-      }
-      if (sample_pos.x > 1.0 || sample_pos.y > 1.0 || sample_pos.z > 1.0) {
-         break;
-      }
-
-      float depth = texture(u_volume_map, sample_pos).r;
-      // Increase luminosity, only on the colors
-      vec4 sample_color = vec4(04.6 * depth);
-      sample_color.a = depth;
-
-      final_color = final_color + (STEP_SIZE * (1.0 - final_color.a) * sample_color);
-      it_pos = it_pos + (STEP_SIZE * ray_dir);
-   }
-
-   //return vec4(vec3(i / MAX_ITERATIONS), 1.0);
-   return vec4(final_color.xyz, 1.0);
 }
 
 uint get_next_node(in int octant, in uvec4 octree_node) {
@@ -297,10 +262,10 @@ void main() {
    int octant_of_octant = get_octant_of_pos(near - it_octant_center, octant_center);
    o_frag_color = vec4(vec3(float(octant_of_octant) / 7.0), 1.0);
    o_frag_color = vec4(0.0, 0.0, 0.0, 1.0);
-   if (texelFetch(u_volume_octree, ivec3(0,0,0), 0).r != 0u) {
+   if (texture(u_volume_map, vec3(0.0, 0.0, 0.00)).r == 2u) {
       o_frag_color = vec4(1.0);
     }
-    o_frag_color = vec4(texelFetch(u_volume_octree, ivec3(0,0,0), 0) / 255u);
+    //o_frag_color = vec4(texture(u_volume_octree, vec3(v_uv,0.0)));
    //o_frag_color = vec4(iterate_octree(ray_dir, ray_origin, box_origin, box_size).rgb, 1.0);
 }
 )";

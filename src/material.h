@@ -16,7 +16,6 @@
 enum eTextureMapType : int {
     COLOR_MAP = 0,
     NORMAL_MAP,
-    SPECULAR_MAP,
     METALLIC_ROUGHNESS_MAP,
     VOLUME_MAP,
     VOLUME_OCTREE,
@@ -28,9 +27,8 @@ const char texture_uniform_LUT[TEXTURE_MAP_TYPE_COUNT][25] = {
    "u_albedo_map",
    "u_normal_map",
    "u_metallic_rough_map",
-   "u_metallic_rough_map",
    "u_volume_map",
-   "u_volume_octree",
+   "u_volume_map",
    "u_frame_color_attachment"
 };
 
@@ -40,7 +38,6 @@ const char texture_uniform_LUT[TEXTURE_MAP_TYPE_COUNT][25] = {
          struct {
              uint8_t color_tex = 0;
              uint8_t normal_tex = 0;
-             uint8_t specular_tex = 0;
              uint8_t metallic_rough_tex = 0;
              uint8_t volume_tex = 0;
              uint8_t volume_octree = 0;
@@ -53,7 +50,6 @@ const char texture_uniform_LUT[TEXTURE_MAP_TYPE_COUNT][25] = {
         struct {
             bool enabled_color = false;
             bool enabled_normal = false;
-            bool enabled_specular = false;
             bool enabled_metallic_rough = false;
             bool enabled_volume = false;
             bool enabled_volume_octree = false;

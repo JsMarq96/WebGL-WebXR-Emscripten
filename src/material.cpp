@@ -156,23 +156,6 @@ uint8_t sMaterialManager::load_async_octree_texture3D(const char* dir,
 
     text->load_empty_volume();
     glBindTexture(GL_TEXTURE_3D, text->texture_id);
-    uint32_t test[4*64];
-        for(int i = 0; i < 4*4*4 * 4; i++) {
-            test[i] = 4294967295;
-        }
-
-        // Re-fill the texture
-        glTexImage3D(GL_TEXTURE_3D,
-                     0,
-                     GL_RGBA32UI,
-                     4,4,4,
-                     0,
-                     GL_RGBA_INTEGER,
-                     GL_UNSIGNED_BYTE,
-                     test);
-        std::cout << glGetError() << std::endl;
-    glBindTexture(GL_TEXTURE_3D, 0);
-
 #ifdef __EMSCRIPTEN__
     std::cout << "Start load of octree volume texture" << std::endl;
     emscripten_async_wget_data(dir,
@@ -204,10 +187,20 @@ uint8_t sMaterialManager::load_async_octree_texture3D(const char* dir,
 
         std::cout << sizet << std::endl;
 
-                sizet = 4;
+        // Re-fill the texture
+        glTexStorage3D(GL_TEXTURE_3D,
+                       1,
+                       GL_RGBA32UI,
+                       sizet,
+                       sizet,
+                       sizet);
 
-
-
+        glTexSubImage3D(GL_TEXTURE_3D,
+                     0, 0, 0, 0,
+                     sizet, sizet, sizet,
+                     GL_RGBA_INTEGER,
+                     GL_UNSIGNED_INT,
+                     octree.nodes);
 
         std::cout << ((uint32_t*) octree.nodes)[0] << std::endl;
 
@@ -233,19 +226,18 @@ void sMaterialManager::enable(const uint8_t material_id) const {
     const sMaterialInstance &material = materials[material_id];
     shaders[material.shader_id].activate();
 
+    int curr_texture_spot = 0;
     for (int texture = 0; texture < TEXTURE_MAP_TYPE_COUNT; texture++) {
         if (!material.enabled_textures[texture]) {
             continue;
         }
-        glActiveTexture(GL_TEXTURE0 + texture);
+        glActiveTexture(GL_TEXTURE0 + curr_texture_spot);
 
-        if (texture == VOLUME_MAP || texture == VOLUME_OCTREE) {
-            glBindTexture(GL_TEXTURE_3D, textures[material.texture_ids[texture]].texture_id);
-        } else {
-            glBindTexture(GL_TEXTURE_2D,  textures[material.texture_ids[texture]].texture_id);
-        }
+        glBindTexture((texture == VOLUME_MAP || texture == VOLUME_OCTREE) ? GL_TEXTURE_3D : GL_TEXTURE_2D,
+                      textures[material.texture_ids[texture]].texture_id);
 
-        shaders[material_id].set_uniform_texture(texture_uniform_LUT[texture], texture);
+        shaders[material_id].set_uniform_texture(texture_uniform_LUT[texture], curr_texture_spot);
+        curr_texture_spot++;
     }
 }
 
