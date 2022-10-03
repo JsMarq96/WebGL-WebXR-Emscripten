@@ -155,7 +155,39 @@ uint8_t sMaterialManager::load_async_octree_texture3D(const char* dir,
     text->depth = depth;
 
     text->load_empty_volume();
-    glBindTexture(GL_TEXTURE_3D, text->texture_id);
+
+    uint32_t test_octree[] = {
+        1,  3, 6, 9,  12,   15, 18, 21,  24, 0, 0, 0,
+        0,  3, 6, 9,  12,   15, 18, 21,  24, 0, 0, 0,
+        0,  3, 6, 9,  12,   15, 18, 21,  24, 0, 0, 0,
+        0,  3, 6, 9,  12,   15, 18, 21,  24, 0, 0, 0,
+        0,  3, 6, 9,  12,   15, 18, 21,  24, 0, 0, 0,
+        0,  3, 6, 9,  12,   15, 18, 21,  24, 0, 0, 0,
+        0,  3, 6, 9,  12,   15, 18, 21,  24, 0, 0, 0,
+        0,  3, 6, 9,  12,   15, 18, 21,  24, 0, 0, 0,
+        0,  3, 6, 9,  12,   15, 18, 21,  24, 0, 0, 0,
+
+
+
+        0,  27, 30, 39, 42, 75, 78, 87, 90, 0, 0, 0    };
+glBindTexture(GL_TEXTURE_3D, text->texture_id);
+
+    glTexStorage3D(GL_TEXTURE_3D,
+                       1,
+                       GL_RGBA32UI,
+                       8,
+                       7,
+                       1);
+
+        glTexSubImage3D(GL_TEXTURE_3D,
+                     0, 0, 0, 0,
+                     8,7,1,
+                     GL_RGBA_INTEGER,
+                     GL_UNSIGNED_INT,
+                     test_octree);
+        glBindTexture(GL_TEXTURE_3D, 0);
+    return texture_count++;
+    //glBindTexture(GL_TEXTURE_3D, text->texture_id);
 #ifdef __EMSCRIPTEN__
     std::cout << "Start load of octree volume texture" << std::endl;
     emscripten_async_wget_data(dir,
@@ -202,7 +234,17 @@ uint8_t sMaterialManager::load_async_octree_texture3D(const char* dir,
                      GL_UNSIGNED_INT,
                      octree.nodes);
 
+        for(uint32_t i = 1; i < 9; i++) {
+            octree.nodes[i].type = (i % 2) ? OCTREE::FULL_VOXEL : OCTREE::EMPTY_VOXEL;
+        }
         std::cout << ((uint32_t*) octree.nodes)[0] << std::endl;
+
+        for(uint32_t i = 0; i < 9; i++) {
+            for(uint32_t j = 0; j < 4; j++) {
+                 std::cout <<  i*4 + j << ": " << ((uint32_t*) octree.nodes)[i*4 + j]  << std::endl;
+            }
+            std::cout << "=====" << std::endl;
+        }
 
         glBindTexture(GL_TEXTURE_3D, 0);
 

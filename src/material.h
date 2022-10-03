@@ -28,7 +28,7 @@ const char texture_uniform_LUT[TEXTURE_MAP_TYPE_COUNT][25] = {
    "u_normal_map",
    "u_metallic_rough_map",
    "u_volume_map",
-   "u_volume_map",
+   "u_volume_octree",
    "u_frame_color_attachment"
 };
 
