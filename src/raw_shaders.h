@@ -220,7 +220,7 @@ vec3 iterate_octree(in vec3 ray_dir, in vec3 ray_origin, in vec3 box_origin, in 
 
    uvec4 curr_node = fetch_texel(it_node);
 
-   for(int i = 0; i < 15; i++) {
+   for(int i = 0; i < 9; i++) {
       if (curr_node.r == 0u) { // Full voxel
           return vec3(1.0);
       } else if (curr_node.r == 1u) { // Empty voxel
