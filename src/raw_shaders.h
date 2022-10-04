@@ -184,38 +184,32 @@ uint get_next_node(in uint octant, in uvec4 octree_node) {
 	return next_node_index;
 }
 
-const uint width = 7u; // 386u;
+const uint width = 8u; // 386u;
 
 ivec3 get_texel_coords_of_index(in uint index) {
     uint index_n = index;
 	return ivec3(uvec3(index_n % width, (index_n / width) % width, index_n / (width * width)));
 }
 
-uint get_index_of_texel_coords(in ivec3 coords) {
-	uvec3 coord = uvec3(coords);
-	return (coord.x + (coord.y * width) + coord.z * (width * width));
+uvec4 fetch_texel(in uint index) {
+     return texelFetch(u_volume_octree, get_texel_coords_of_index(index), 0);
 }
 
-ivec3 get_child_index_at_octant(in uvec4 curr_node, in ivec3 coords, in uint octant) {
-	if (octant <= 2u) {
-		return get_texel_coords_of_index(get_next_node(octant, curr_node));
-	}
-	uint child_index = 0u;
-	// Selec the important texel
-	if (octant > 2u && octant <= 6u) {
-       // Second texel
-	   child_index += 1u;
-	} else if (octant > 6u) {
-	   // Third texel, child 7
-	   child_index += 2u;
-	}
+uint get_next_index(in uint octant, in uint curr_index, in uvec4 curr_node) {
+   if (octant <= 2u) {
+      return get_next_node(octant, curr_node);
+   }
+   uint child_delta = 0u;
+   if (octant <= 6u) {
+      child_delta = 1u;
+   } else {
+      child_delta = 2u;
+   }
 
-    ivec3 texel_index = get_texel_coords_of_index(get_index_of_texel_coords(coords) + child_index);
-    uvec4 octree_node = texelFetch(u_volume_octree, texel_index, 0);
+   uvec4 texel = fetch_texel(curr_index + child_delta);
 
-    return get_texel_coords_of_index(get_next_node(octant, octree_node));
+   return get_next_node(octant, texel);
 }
-
 
 vec3 iterate_octree(in vec3 ray_dir, in vec3 ray_origin, in vec3 box_origin, in vec3 box_size) {
    vec3 near, far;
@@ -223,17 +217,14 @@ vec3 iterate_octree(in vec3 ray_dir, in vec3 ray_origin, in vec3 box_origin, in 
 
    vec3 box_center = (box_size/ 2.0);
    vec3 octant_relative_center = vec3(0.0);
-   ivec3 node_coords = ivec3(0,0,0);
+   uint it_node = 0u;
 
-   uvec4 octree_node = texelFetch(u_volume_octree, node_coords, 0);
    uint octant = get_octant_of_pos(near - box_center, octant_relative_center);
 
-   uvec4 index = texelFetch(u_volume_octree, get_child_index_at_octant(octree_node, node_coords, octant), 0);
+   uvec4 curr_node = fetch_texel(it_node);
+   uint next_node = get_next_index(octant, it_node, curr_node);
 
-   return vec3(index.r / 2u) / 20.0;
-
-   return vec3(0.0, 0.0, 1.0);
-
+   return vec3(fetch_texel(next_node).r);
 }
 
 // TODO: test this in object space  and test to center the cube
