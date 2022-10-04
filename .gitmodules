@@ -7,6 +7,3 @@
 [submodule "emscripten-webxr"]
 	path = emscripten-webxr
 	url = https://github.com/JsMarq96/emscripten-webxr.git
-[submodule "glfw"]
-	path = glfw
-	url = https://github.com/glfw/glfw
