@@ -213,18 +213,32 @@ uint get_next_index(in uint octant, in uint curr_index, in uvec4 curr_node) {
 
 vec3 iterate_octree(in vec3 ray_dir, in vec3 ray_origin, in vec3 box_origin, in vec3 box_size) {
    vec3 near, far;
-   ray_AABB_intersection(ray_origin, ray_dir, box_origin, box_size, near, far);
 
    vec3 box_center = (box_size/ 2.0);
    vec3 octant_relative_center = vec3(0.0);
    uint it_node = 0u;
 
-   uint octant = get_octant_of_pos(near - box_center, octant_relative_center);
-
    uvec4 curr_node = fetch_texel(it_node);
-   uint next_node = get_next_index(octant, it_node, curr_node);
 
-   return vec3(fetch_texel(next_node).r);
+   for(int i = 0; i < 8; i++) {
+      if (curr_node.r == 0u) { // Full voxel
+          return vec3(1.0);
+      } else if (curr_node.r == 1u) { // Empty voxel
+          return vec3(0.0);
+      }
+      // Else empty voxel
+      ray_AABB_intersection(ray_origin, ray_dir, box_origin, box_size, near, far);
+      uint octant = get_octant_of_pos(near - box_center, octant_relative_center);
+
+      // Iterate down the voxel
+      box_size = box_size/ 2.0;
+      box_center = box_center + octant_relative_center * (box_size / 2.0);
+
+      it_node = get_next_index(octant, it_node, curr_node);
+      curr_node = fetch_texel(it_node);
+   }
+
+   return vec3(1.0, 0.0, 0.0);
 }
 
 // TODO: test this in object space  and test to center the cube

@@ -157,7 +157,7 @@ uint8_t sMaterialManager::load_async_octree_texture3D(const char* dir,
     text->load_empty_volume();
 
     uint32_t test_octree[] = {
-        1,  3, 6, 9,  12,   15, 18, 21,  24, 0, 0, 0,
+        2,  3, 6, 9,  12,   15, 18, 21,  24, 0, 0, 0,
         0,  3, 6, 9,  12,   15, 18, 21,  24, 0, 0, 0,
         1,  3, 6, 9,  12,   15, 18, 21,  24, 0, 0, 0,
         0,  3, 6, 9,  12,   15, 18, 21,  24, 0, 0, 0,
