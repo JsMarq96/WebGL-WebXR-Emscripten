@@ -184,7 +184,7 @@ uint get_next_node(in uint octant, in uvec4 octree_node) {
 	return next_node_index;
 }
 
-const uint width = 8u; // 386u;
+const uint width = 386u;
 
 ivec3 get_texel_coords_of_index(in uint index) {
     uint index_n = index;
@@ -220,7 +220,7 @@ vec3 iterate_octree(in vec3 ray_dir, in vec3 ray_origin, in vec3 box_origin, in 
 
    uvec4 curr_node = fetch_texel(it_node);
 
-   for(int i = 0; i < 8; i++) {
+   for(int i = 0; i < 15; i++) {
       if (curr_node.r == 0u) { // Full voxel
           return vec3(1.0);
       } else if (curr_node.r == 1u) { // Empty voxel

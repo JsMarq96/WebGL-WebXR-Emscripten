@@ -40,7 +40,7 @@ namespace OCTREE {
         uint16_t heigth = 0;
         uint16_t depth = 0;
 
-        uint8_t density_threshold = 20;
+        uint8_t density_threshold = 15;
 
         inline eVoxelType get_pixel_state(const uint16_t x,
                                           const uint16_t y,
@@ -78,7 +78,7 @@ namespace OCTREE {
                 for(uint32_t x_delta = 0; x_delta < 2; x_delta++) {
                     uint32_t child_index = (x_delta + prev_x) + (y_delta + prev_y) * prev_width;
                     child_index += (z_delta + prev_z) * (prev_width * prev_width);
-                    children[x_delta + y_delta * 2 + z_delta * 4] = child_index + padding;
+                    children[x_delta + y_delta * 2 + z_delta * 4] = (child_index + padding);
                 }
             }
         }

@@ -170,7 +170,7 @@ uint8_t sMaterialManager::load_async_octree_texture3D(const char* dir,
 
 
         0,  27, 30, 39, 42, 75, 78, 87, 90, 0, 0, 0    };
-glBindTexture(GL_TEXTURE_3D, text->texture_id);
+    /*glBindTexture(GL_TEXTURE_3D, text->texture_id);
 
     glTexStorage3D(GL_TEXTURE_3D,
                        1,
@@ -186,7 +186,7 @@ glBindTexture(GL_TEXTURE_3D, text->texture_id);
                      GL_UNSIGNED_INT,
                      test_octree);
         glBindTexture(GL_TEXTURE_3D, 0);
-    return texture_count++;
+    return texture_count++;*/
     //glBindTexture(GL_TEXTURE_3D, text->texture_id);
 #ifdef __EMSCRIPTEN__
     std::cout << "Start load of octree volume texture" << std::endl;
@@ -219,6 +219,12 @@ glBindTexture(GL_TEXTURE_3D, text->texture_id);
 
         std::cout << sizet << std::endl;
 
+         for(uint32_t i = 0; i < octree.element_count; i++) {
+            for(uint32_t j = 0; j < 8; j++) {
+                octree.nodes[i].childs[j] *= 3;
+            }
+        }
+
         // Re-fill the texture
         glTexStorage3D(GL_TEXTURE_3D,
                        1,
@@ -234,18 +240,7 @@ glBindTexture(GL_TEXTURE_3D, text->texture_id);
                      GL_UNSIGNED_INT,
                      octree.nodes);
 
-        for(uint32_t i = 1; i < 9; i++) {
-            octree.nodes[i].type = (i % 2) ? OCTREE::FULL_VOXEL : OCTREE::EMPTY_VOXEL;
-        }
         std::cout << ((uint32_t*) octree.nodes)[0] << std::endl;
-
-        for(uint32_t i = 0; i < 9; i++) {
-            for(uint32_t j = 0; j < 4; j++) {
-                 std::cout <<  i*4 + j << ": " << ((uint32_t*) octree.nodes)[i*4 + j]  << std::endl;
-            }
-            std::cout << "=====" << std::endl;
-        }
-
         glBindTexture(GL_TEXTURE_3D, 0);
 
     }, NULL);
