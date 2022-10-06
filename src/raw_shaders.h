@@ -108,7 +108,7 @@ vec4 render_volume() {
       if (final_color.a >= 0.95) {
          break;
       }
-      vec3 sample_pos = ((v_local_position - it_pos) / 2.0) + 0.5;
+      vec3 sample_pos = ((v_local_position - it_pos));
       // Aboid clipping outside
       if (sample_pos.x < 0.0 || sample_pos.y < 0.0 || sample_pos.z < 0.0) {
          break;
