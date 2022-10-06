@@ -108,8 +108,11 @@ namespace Render {
 
         eRenderPassTarget target = SCREEN_TARGET;
 
-        bool use_color_attachment = false;
-        uint8_t color_attachment_pass_id = 0;
+        bool use_color_attachment0 = false;
+        bool use_color_attachment1 = false;
+
+        uint8_t color_attachment_pass0_id = 0;
+        uint8_t color_attachment_pass1_id = 0;
 
         uint8_t fbo_id;
 
@@ -163,8 +166,15 @@ namespace Render {
             render_passes[render_pass_size].target = target;
             render_passes[render_pass_size].fbo_id = fbo_id;
 
-            render_passes[render_pass_size].use_color_attachment = true;
-            render_passes[render_pass_size].color_attachment_pass_id = input_fbo;
+            if (fbos[fbo_id].attachment_use == JUST_COLOR) {
+                render_passes[render_pass_size].use_color_attachment0 = true;
+                render_passes[render_pass_size].color_attachment_pass0_id = input_fbo;
+            } else if (fbos[fbo_id].attachment_use == JUST_DUAL_COLOR) {
+                render_passes[render_pass_size].use_color_attachment0 = true;
+                render_passes[render_pass_size].color_attachment_pass0_id = input_fbo;
+                render_passes[render_pass_size].use_color_attachment1 = true;
+                render_passes[render_pass_size].color_attachment_pass1_id = input_fbo;
+            }
 
             return render_pass_size++;
         }

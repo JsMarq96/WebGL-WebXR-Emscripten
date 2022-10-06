@@ -166,8 +166,14 @@ void sMaterialManager::enable(const uint8_t material_id) const {
         glBindTexture((texture == VOLUME_MAP) ? GL_TEXTURE_3D : GL_TEXTURE_2D,
                       textures[material.texture_ids[texture]].texture_id);
 
-        shaders[material_id].set_uniform_texture(texture_uniform_LUT[texture], curr_texture_spot);
+        shaders[material_id].set_uniform_texture(texture_uniform_LUT[texture],
+                                                 curr_texture_spot);
         curr_texture_spot++;
+    }
+
+    if (material.enabled_textures[VOLUME_MAP]) {
+        shaders[material.shader_id].set_uniform("u_density_threshold",
+                                                density_threshold);
     }
 }
 

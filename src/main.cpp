@@ -216,6 +216,9 @@ void launch_application() {
     const uint8_t outside_volume_shader = renderer.material_man.add_raw_shader(RawShaders::basic_vertex,
                                                                             RawShaders::volumetric_fragment_outside);
 
+    const uint8_t outside_isosurface_shader = renderer.material_man.add_raw_shader(RawShaders::basic_vertex,
+                                                                                   RawShaders::isosurface_fragment_outside);
+
     const uint8_t plaincolor_shaders = renderer.material_man.add_raw_shader(RawShaders::basic_vertex,
                                                                          RawShaders::basic_fragment);
 
@@ -228,7 +231,7 @@ void launch_application() {
     /*app_state.volume_material_inside = renderer.material_man.add_material(inside_volume_shader,
                                                                        {  .volume_tex = volumetric_texture,
                                                                           .enabled_volume = true});*/
-    app_state.volume_material_outside = renderer.material_man.add_material(outside_volume_shader,
+    app_state.volume_material_outside = renderer.material_man.add_material(outside_isosurface_shader,
                                                                        {  .volume_tex = volumetric_texture,
                                                                           .enabled_volume = true});
 

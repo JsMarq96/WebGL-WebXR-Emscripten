@@ -18,16 +18,18 @@ enum eTextureMapType : int {
     NORMAL_MAP,
     METALLIC_ROUGHNESS_MAP,
     VOLUME_MAP,
-    COLOR_ATTACHMENT,
+    COLOR_ATTACHMENT0,
+    COLOR_ATTACHMENT1,
     TEXTURE_MAP_TYPE_COUNT
 };
 
-const char texture_uniform_LUT[TEXTURE_MAP_TYPE_COUNT][25] = {
+const char texture_uniform_LUT[TEXTURE_MAP_TYPE_COUNT][26] = {
    "u_albedo_map",
    "u_normal_map",
    "u_metallic_rough_map",
    "u_volume_map",
-   "u_frame_color_attachment"
+   "u_frame_color_attachment0",
+   "u_frame_color_attachment1"
 };
 
  struct sMaterialTexConstructor {
@@ -38,7 +40,8 @@ const char texture_uniform_LUT[TEXTURE_MAP_TYPE_COUNT][25] = {
              uint8_t normal_tex = 0;
              uint8_t metallic_rough_tex = 0;
              uint8_t volume_tex = 0;
-             uint8_t color_attach_tex = 0;
+             uint8_t color_attach_tex0 = 0;
+             uint8_t color_attach_tex1 = 0;
          };
      };
 
@@ -49,7 +52,8 @@ const char texture_uniform_LUT[TEXTURE_MAP_TYPE_COUNT][25] = {
             bool enabled_normal = false;
             bool enabled_metallic_rough = false;
             bool enabled_volume = false;
-            bool enabled_color_attach = false;
+            bool enabled_color_attach0 = false;
+            bool enabled_color_attach1 = false;
         };
     };
 };
@@ -57,10 +61,13 @@ const char texture_uniform_LUT[TEXTURE_MAP_TYPE_COUNT][25] = {
 struct sMaterialInstance {
     uint8_t shader_id;
     uint8_t texture_ids[TEXTURE_MAP_TYPE_COUNT];
-    bool            enabled_textures[TEXTURE_MAP_TYPE_COUNT];
+    bool    enabled_textures[TEXTURE_MAP_TYPE_COUNT];
 };
 
 struct sMaterialManager {
+    // For isosurface rendering; a global setting.. ?
+    float density_threshold = 0.005f;
+
     sTexture        textures[MAX_TEXTURE_COUNT];
     uint8_t         texture_count = 0;
     sShader         shaders[MAX_TEXTURE_COUNT];
@@ -96,8 +103,9 @@ struct sMaterialManager {
     void add_cubemap_texture(const char  *text_dir);
 
     void add_color_attachment_from_fbo(const uint8_t material_id,
-                                       const sFBO &fbo) {
-        materials[material_id].enabled_textures[COLOR_ATTACHMENT] = true;
+                                       const sFBO &fbo,
+                                       const int attachment_id) {
+        materials[material_id].enabled_textures[COLOR_ATTACHMENT0 + attachment_id] = true;
         //textures[COLOR_ATTACHMENT] = fbo.color_attachment;
     }
 

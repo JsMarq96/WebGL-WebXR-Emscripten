@@ -146,8 +146,7 @@ void Render::sInstance::render_frame(const glm::mat4x4 &view_proj_mat,
 
             if (curr_fbo.width != width ||
                 curr_fbo.height != heigth) {
-                curr_fbo.clean();
-                curr_fbo.init_with_color(width, heigth);
+                curr_fbo.reinit(width, heigth);
             }
 
             curr_fbo.bind();
@@ -177,11 +176,18 @@ void Render::sInstance::render_frame(const glm::mat4x4 &view_proj_mat,
             sShader &shader = material_man.shaders[material.shader_id];
             sMeshBuffers &mesh = meshes[draw_call.mesh_id];
 
-
-            if (pass.use_color_attachment) {
+            // Bind fbo attachments
+            if (pass.use_color_attachment0) {
                 material_man.add_color_attachment_from_fbo(draw_call.material_id,
-                                                           fbos[render_passes[pass.color_attachment_pass_id].fbo_id]);
+                                                           fbos[render_passes[pass.color_attachment_pass0_id].fbo_id],
+                                                           0);
             }
+            if (pass.use_color_attachment0) {
+                material_man.add_color_attachment_from_fbo(draw_call.material_id,
+                                                           fbos[render_passes[pass.color_attachment_pass1_id].fbo_id],
+                                                           1);
+            }
+
 
             model = draw_call.transform.get_model();
             model_invert = glm::inverse(model);
