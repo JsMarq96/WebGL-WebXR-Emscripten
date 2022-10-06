@@ -1,6 +1,10 @@
 #ifndef RENDER_H_
 #define RENDER_H_
 
+#ifndef __EMSCRIPTEN__
+#include <GL/gl3w.h>
+#endif
+
 #include "transform.h"
 #include "shader.h"
 #include "material.h"

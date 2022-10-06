@@ -1,9 +1,13 @@
 #ifndef FBO_H_
 #define FBO_H_
+#ifdef __EMSCRIPTEN__
+#include <webgl/webgl2.h>
+#include <GLES3/gl3.h>
+#else
+#include <GL/gl3w.h>
+#endif
 
 #include "texture.h"
-#include <GLES3/gl3.h>
-#include <webgl/webgl2.h>
 
 enum eFBOAttachmentUse : uint32_t {
     JUST_COLOR = 0,

@@ -1,10 +1,17 @@
 #include "material.h"
 
-#include "texture.h"
-
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
+#include <GLES3/gl3.h>
+#else
+#include <GL/gl3w.h>
 #endif
+
+#include "texture.h"
+#include "volumetric_octree.h"
+#include <cstddef>
+#include <cstdint>
+
 
 uint8_t sMaterialManager::add_shader(const char     *vertex_shader,
                            const char     *fragment_shader) {
@@ -100,8 +107,6 @@ void sMaterialManager::add_volume_texture(const char* text_dir,
 
     text->load_empty_volume();
 
-    //enabled_textures[VOLUME_MAP] = true;
-
     std::cout << "Start load of volume texture" << std::endl;
     emscripten_async_wget_data(dir,
                                text,
@@ -140,7 +145,6 @@ void sMaterialManager::add_volume_texture(const char* text_dir,
     return texture_count++;
  }
 
-
 /**
  * Binds the textures on Opengl
  *  COLOR - Texture 0
@@ -152,19 +156,18 @@ void sMaterialManager::enable(const uint8_t material_id) const {
     const sMaterialInstance &material = materials[material_id];
     shaders[material.shader_id].activate();
 
+    int curr_texture_spot = 0;
     for (int texture = 0; texture < TEXTURE_MAP_TYPE_COUNT; texture++) {
         if (!material.enabled_textures[texture]) {
             continue;
         }
-        glActiveTexture(GL_TEXTURE0 + texture);
+        glActiveTexture(GL_TEXTURE0 + curr_texture_spot);
 
-        if (texture == VOLUME_MAP) {
-            glBindTexture(GL_TEXTURE_3D, textures[material.texture_ids[texture]].texture_id);
-        } else {
-            glBindTexture(GL_TEXTURE_2D,  textures[material.texture_ids[texture]].texture_id);
-        }
+        glBindTexture((texture == VOLUME_MAP) ? GL_TEXTURE_3D : GL_TEXTURE_2D,
+                      textures[material.texture_ids[texture]].texture_id);
 
-        shaders[material_id].set_uniform_texture(texture_uniform_LUT[texture], texture);
+        shaders[material_id].set_uniform_texture(texture_uniform_LUT[texture], curr_texture_spot);
+        curr_texture_spot++;
     }
 }
 

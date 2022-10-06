@@ -1,12 +1,15 @@
 #ifndef SHADER_H_
 #define SHADER_H_
 
+#ifndef __EMSCRIPTEN__
+#include "GL/gl3w.h"
+#else
+#include <webgl/webgl2.h>
+#endif
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 #include <glm/mat4x4.hpp>
 #include <glm/mat3x3.hpp>
-
-#include <webgl/webgl2.h>
 
 #include <stddef.h>
 #include <cassert>

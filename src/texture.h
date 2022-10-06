@@ -43,6 +43,8 @@ struct sTexture {
 
     void load_empty_volume();
 
+    void load_empty_2D();
+
     void clean();
 };
 

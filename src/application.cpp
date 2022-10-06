@@ -1,12 +1,15 @@
 #include "application.h"
 
+#ifdef __EMSCRIPTEN__
 #include <webxr.h>
+#endif
 #include "glm/ext/matrix_float4x4.hpp"
 #include <glm/gtc/type_ptr.hpp>
 
 #include <iostream>
 
 void Application::sInstance::get_current_state() {
+#ifdef __EMSCRIPTEN__
     WebXRInputSource controllers[2];
     int controller_count = 0;
 
@@ -35,4 +38,5 @@ void Application::sInstance::get_current_state() {
     }
 
     // TODO: controller inputs
+#endif
 }

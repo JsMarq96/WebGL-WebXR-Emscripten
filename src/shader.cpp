@@ -1,5 +1,12 @@
 #include "shader.h"
+
+#ifndef __EMSCRIPTEN__
+#include "gl3w.h"
+#include <GL/gl3w.h>
+#else
 #include <webgl/webgl2.h>
+#endif
+
 #include <iostream>
 #include <errno.h>
 #include <cstring>
@@ -195,6 +202,7 @@ void sShader::set_uniform_matrix4(const char* name, const glm::mat4x4 &matrix) c
     glUniformMatrix4fv(glGetUniformLocation(ID, name), 1, false, glm::value_ptr(matrix));
 }
 
+#include <iostream>
 void sShader::set_uniform_texture(const char* name,
                                   const int tex_spot) const {
     glUniform1i(glGetUniformLocation(ID, name), tex_spot);

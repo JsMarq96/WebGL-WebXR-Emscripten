@@ -1,14 +1,17 @@
 #include "texture.h"
-
-#include <webgl/webgl2.h>
-
-#ifdef __EMSCRIPTEN__
+#ifndef __EMSCRIPTEN__
+#include <GL/gl3w.h>
+#else
 #include <emscripten.h>
-#endif
-void upload_simple_texture_to_GPU(sTexture *text);
-
+#include <webgl/webgl2.h>
 #include <iostream>
 #include <GLES3/gl3.h>
+#endif
+
+#include <cstdlib>
+
+void upload_simple_texture_to_GPU(sTexture *text);
+
 
 void sTexture::load(const eTextureType text_type,
                     const bool istore_on_RAM,
@@ -38,7 +41,7 @@ void sTexture::load(const eTextureType text_type,
             strcat(name_buffer, cubemap_terminations[i]);
 
 #ifndef __EMSCRIPTEN__
-            raw_data = stbi_load(name_buffer, &w, &h, &l, 0);
+            //raw_data = stbi_load(name_buffer, &w, &h, &l, 0);
 #else
             raw_data = emscripten_get_preloaded_image_data(name_buffer, &w, &h);
             l = 4;
@@ -72,7 +75,7 @@ void sTexture::load(const eTextureType text_type,
     //text->raw_data = stbi_load(texture_name, &w, &h, &l, 0);
 
 #ifndef __EMSCRIPTEN__
-    raw_data = stbi_load(name_buffer, &w, &h, &l, 0);
+    //raw_data = stbi_load(name_buffer, &w, &h, &l, 0);
 #else
     raw_data = emscripten_get_preloaded_image_data(texture_name, &w, &h);
     l = 4;
@@ -136,7 +139,7 @@ void sTexture::load3D(const char* texture_name,
     //text->raw_data = stbi_load(texture_name, &w, &h, &l, 0);
 
 #ifndef __EMSCRIPTEN__
-    raw_data = stbi_load(name_buffer, &w, &h, &l, 0);
+    //raw_data = stbi_load(name_buffer, &w, &h, &l, 0);
 #else
     raw_data = emscripten_get_preloaded_image_data(texture_name, &w, &h);
     l = 4;
@@ -182,11 +185,11 @@ void sTexture::create_empty2D_with_size(const uint32_t w,
 
     glTexImage2D(GL_TEXTURE_2D,
                  0,
-                 GL_RGBA,
+                 GL_RGBA32F,
                  w, h,
                  0,
                  GL_RGBA,
-                 GL_UNSIGNED_BYTE,
+                 GL_FLOAT,
                  NULL);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -224,8 +227,25 @@ void sTexture::load_empty_volume() {
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);*/
 
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_BASE_LEVEL, 0);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAX_LEVEL, 0);
 
     glBindTexture(GL_TEXTURE_3D, 0);
 }
+
+void sTexture::load_empty_2D() {
+    // Load empty texture
+    glGenTextures(1, &texture_id);
+
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+};

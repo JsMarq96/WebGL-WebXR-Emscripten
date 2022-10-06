@@ -1,18 +1,26 @@
-#include <GLES3/gl3.h>
+#include <cstddef>
 #include <cstdint>
-#include <cstdlib>
+#include <iostream>
+
+#ifndef __EMSCRIPTEN__
+#include <GL/gl3w.h>
+#include <GLFW/glfw3.h>
+#else
+#include <GLES3/gl3.h>
 #include <emscripten/em_asm.h>
 #include <emscripten/emscripten.h>
 #include <emscripten/html5_webgl.h>
 #include <emscripten/html5.h>
 #include <webgl/webgl2.h>
 #include <webxr.h>
-#include <glm/gtc/type_ptr.hpp>
+#endif
 
+#include <glm/gtc/type_ptr.hpp>
 #include <cassert>
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <cstdint>
+#include <cstdlib>
 #include <glm/gtx/string_cast.hpp>
 #include "glm/ext/matrix_float4x4.hpp"
 #include "glm/ext/quaternion_common.hpp"
@@ -25,9 +33,10 @@
 #include "transform.h"
 #include "collision_detection.h"
 
-#include <iostream>
+#define WIN_WIDTH	740
+#define WIN_HEIGHT	680
+#define WIN_NAME	"WebGL-Vis"
 
-#define XR_ENABLE true
 
 
 Render::sInstance renderer;
@@ -35,6 +44,7 @@ Application::sInstance app_state;
 
 uint8_t first_render_pass = 0;
 
+#ifdef __EMSCRIPTEN__
 void render_stereoscopic_frame(void *user_data,
                                int framebuffer_id,
                                int time,
@@ -121,11 +131,35 @@ void close_XR_session(void* userData,
 
 }
 
+void xr_session_start(void *user_data,
+                      int mode) {
+    std::cout << mode << "start" << std::endl;
+}
+
+void xr_session_end(void *user_data,
+                      int mode) {
+    //
+}
+
+
+
+void xr_error(void* user_data, int error) {
+    std::cout << "Error " << error << std::endl;
+}
+#else
+
+GLFWwindow* window;
+#endif
+
 
 void render_frame() {
     int width, height, lef, right;
+#ifdef __EMSCRIPTEN__
     emscripten_get_canvas_element_size("#canvas", &width, &height);
-
+#else
+    glfwPollEvents();
+    glfwGetFramebufferSize(window, &width, &height);
+#endif
     renderer.base_framebuffer = 0;
 
     glViewport(0, 0, width, height);
@@ -164,53 +198,8 @@ void render_frame() {
                           height, true);
 }
 
-void xr_session_start(void *user_data,
-                      int mode) {
-    std::cout << mode << "start" << std::endl;
-}
 
-void xr_session_end(void *user_data,
-                      int mode) {
-    //
-}
-
-
-
-void xr_error(void* user_data, int error) {
-    std::cout << "Error " << error << std::endl;
-}
-
-
-
-
-
-int main() {
-    EmscriptenWebGLContextAttributes attrs;
-    emscripten_webgl_init_context_attributes(&attrs);
-    attrs.majorVersion = 3;
-    attrs.proxyContextToMainThread = EMSCRIPTEN_WEBGL_CONTEXT_PROXY_FALLBACK;
-    attrs.renderViaOffscreenBackBuffer = EM_TRUE;
-    EMSCRIPTEN_WEBGL_CONTEXT_HANDLE context = emscripten_webgl_create_context("#canvas", &attrs);
-    emscripten_webgl_make_context_current(context);
-
-    //webxr_is_session_supported(WEBXR_SESSION_MODE_IMMERSIVE_VR, );
-
-
-    // Test emscripten_webgl_get_supported_extensions() API
-    char *extensions = emscripten_webgl_get_supported_extensions();
-    assert(extensions);
-    assert(strlen(extensions) > 0);
-    assert(strstr(extensions, "WEBGL") != 0);
-    std::cout << extensions << "Loaded extensions" << std::endl;
-    free(extensions);
-
-    // Init the XR runtime
-    webxr_init(render_stereoscopic_frame,
-               xr_session_start,
-               xr_session_end,
-               xr_error,
-               NULL);
-
+void launch_application() {
     renderer.init();
 
     // Loading assets
@@ -235,11 +224,10 @@ int main() {
                                                                                256,
                                                                                256,
                                                                                256);
-
     // Define the materials with the prevousle loaded resources
-    app_state.volume_material_inside = renderer.material_man.add_material(inside_volume_shader,
+    /*app_state.volume_material_inside = renderer.material_man.add_material(inside_volume_shader,
                                                                        {  .volume_tex = volumetric_texture,
-                                                                          .enabled_volume = true});
+                                                                          .enabled_volume = true});*/
     app_state.volume_material_outside = renderer.material_man.add_material(outside_volume_shader,
                                                                        {  .volume_tex = volumetric_texture,
                                                                           .enabled_volume = true});
@@ -285,8 +273,101 @@ int main() {
                                                                               .call_state = {.depth_function = GL_ALWAYS},
                                                                               .enabled = false
                                                                           });
+}
+
+
+void web_main();
+int native_main();
+
+int main() {
+#ifdef __EMSCRIPTEN__
+    web_main();
+#else
+    return native_main();
+#endif
+}
+
+void temp_error_callback(int error_code, const char* descr);
+
+
+int native_main() {
+#ifndef __EMSCRIPTEN__
+    if (!glfwInit()) {
+        return EXIT_FAILURE;
+    }
+
+    // GLFW config
+    glfwSetErrorCallback(temp_error_callback);
+
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    window = glfwCreateWindow(WIN_WIDTH, WIN_HEIGHT, WIN_NAME, NULL, NULL);
+
+    glfwMakeContextCurrent(window);
+    glfwSwapInterval(1);
+
+    if (!window) {
+        std::cout << "Error, could not create window" << std::endl;
+    } else {
+        if (!gl3wInit()) {
+            launch_application();
+            glfwMakeContextCurrent(window);
+            while(!glfwWindowShouldClose(window)) {
+                glfwPollEvents();
+                render_frame();
+                glfwSwapBuffers(window);
+            }
+        } else {
+            std::cout << "Cannot init gl3w" << std::endl;
+        }
+    }
+    glfwDestroyWindow(window);
+    glfwTerminate();
+#endif
+    return 0;
+}
+
+void web_main() {
+#ifdef __EMSCRIPTEN__
+    EmscriptenWebGLContextAttributes attrs;
+    emscripten_webgl_init_context_attributes(&attrs);
+    attrs.majorVersion = 3;
+    attrs.proxyContextToMainThread = EMSCRIPTEN_WEBGL_CONTEXT_PROXY_FALLBACK;
+    attrs.renderViaOffscreenBackBuffer = EM_TRUE;
+    EMSCRIPTEN_WEBGL_CONTEXT_HANDLE context = emscripten_webgl_create_context("#canvas", &attrs);
+    emscripten_webgl_make_context_current(context);
+
+    //webxr_is_session_supported(WEBXR_SESSION_MODE_IMMERSIVE_VR, );
+
+
+    // Test emscripten_webgl_get_supported_extensions() API
+    char *extensions = emscripten_webgl_get_supported_extensions();
+    assert(extensions);
+    assert(strlen(extensions) > 0);
+    assert(strstr(extensions, "WEBGL") != 0);
+    std::cout << extensions << "Loaded extensions" << std::endl;
+    free(extensions);
+
+    // Init the XR runtime
+    webxr_init(render_stereoscopic_frame,
+               xr_session_start,
+               xr_session_end,
+               xr_error,
+               NULL);
+
+    launch_application();
 
     emscripten_set_main_loop(render_frame,
                              0,
                              0);
+#else
+    assert(false && "RUnning web method on native!");
+#endif
+}
+
+// GLFW CALLBACKS =========
+void temp_error_callback(int error_code, const char* descr) {
+    std::cout << "GLFW Error: " << error_code << " " << descr << std::endl;
 }
