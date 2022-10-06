@@ -69,7 +69,6 @@ void Render::sInstance::init() {
     glFrontFace(current_state.front_face);
 }
 
-#include <iostream>
 void Render::sInstance::change_graphic_state(const sGLState &new_state) {
     // Depth
     if (current_state.depth_test_enabled != new_state.depth_test_enabled) {

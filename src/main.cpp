@@ -240,6 +240,7 @@ void launch_application() {
 
     // Create render pipeline
     uint8_t first_pass_fbo_id = renderer.get_new_fbo_id();
+    renderer.fbos[first_pass_fbo_id].init_with_dual_color(1040, 1040);
 
     app_state.final_render_pass_id = renderer.add_render_pass(Render::SCREEN_TARGET,
                                                               0);
