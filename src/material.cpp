@@ -140,7 +140,7 @@ void sMaterialManager::add_volume_texture(const char* text_dir,
     }, NULL);
 
 #else
-    assert(false && "There is async loading of volumes on this platform yet");
+    //assert(false && "There is async loading of volumes on this platform yet");
 #endif
     return texture_count++;
  }

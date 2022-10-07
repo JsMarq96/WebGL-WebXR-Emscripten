@@ -1,6 +1,8 @@
 #ifndef RENDER_H_
 #define RENDER_H_
 
+#include <GLES3/gl3.h>
+#include <cstdint>
 #ifndef __EMSCRIPTEN__
 #include <GL/gl3w.h>
 #endif
@@ -9,6 +11,7 @@
 #include "shader.h"
 #include "material.h"
 #include "fbo.h"
+#include "raw_shaders.h"
 
 #define SHADER_TOTAL_COUNT 10
 #define MESH_TOTAL_COUNT 20
@@ -78,6 +81,7 @@ namespace Render {
         uint8_t mesh_id;
         uint8_t material_id;
 
+        bool use_transform = true;
         sTransform transform;
 
         sGLState call_state;
@@ -125,6 +129,8 @@ namespace Render {
 
         uint32_t base_framebuffer = 0;
 
+        uint8_t quad_mesh_id = 0;
+
         uint8_t fbo_count = 0;
         sFBO fbos[FBO_TOTAL_COUNT];
         uint8_t meshes_count = 0;
@@ -151,6 +157,30 @@ namespace Render {
             pass->draw_stack[pass->draw_stack_size] = draw_call;
 
             return pass->draw_stack_size++;
+        }
+
+        inline uint8_t add_quad_pass(const eRenderPassTarget target,
+                                     const uint8_t fbo_id,
+                                     const char* fragment_shader,
+                                     const sMaterialTexConstructor &mat_constructor) {
+            uint8_t quad_mat_id = material_man.add_material(material_man.add_raw_shader(RawShaders::quad_vertex,
+                                                                                        fragment_shader),
+                                                            mat_constructor);
+
+            render_passes[render_pass_size].target = target;
+            render_passes[render_pass_size].fbo_id = fbo_id;
+
+            add_drawcall_to_pass(render_pass_size,
+                                 sDrawCall{
+                                     .mesh_id = quad_mesh_id,
+                                     .material_id = quad_mat_id,
+                                     .use_transform = false,
+                                     .call_state = sGLState{
+                                         .depth_test_enabled = false,
+                                         .culling_enabled = false
+                                }});
+
+            return render_pass_size++;
         }
 
         inline uint8_t add_render_pass(const eRenderPassTarget target,
@@ -196,6 +226,10 @@ namespace Render {
             render_passes[pass_id].draw_stack[draw_call].enabled = use;
         }
 
+        inline uint32_t get_texture_of_fbo(const uint8_t fbo_id) const {
+            return fbos[fbo_id].color_attachment0.texture_id;
+        }
+
         inline sDrawCall* get_draw_call(const uint8_t pass_id,
                                         const uint8_t draw_call) {
             return &render_passes[pass_id].draw_stack[draw_call];
@@ -205,6 +239,26 @@ namespace Render {
                                               const uint8_t draw_call,
                                               const sTransform &transf) {
             render_passes[pass_id].draw_stack[draw_call].transform = transf;
+        }
+
+        // FBO Functions =====
+        uint8_t FBO_init_with_single_color(const uint8_t fbo_id,
+                                           const uint32_t width_i,
+                                           const uint32_t height_i);
+        uint8_t FBO_init_with_dual_color(const uint8_t fbo_id,
+                                         const uint32_t width_i,
+                                         const uint32_t height_i);
+        uint8_t FBO_clean(const uint8_t fbo_id);
+
+        uint8_t FBO_reinit(const uint8_t fbo_id,
+                           const uint32_t width_i,
+                           const uint32_t height_i);
+
+        inline void FBO_bind(const uint8_t fbo_id) const {
+            glBindFramebuffer(GL_FRAMEBUFFER, fbos[fbo_id].id);
+        }
+        inline void FBO_unbind() const {
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
     };
 

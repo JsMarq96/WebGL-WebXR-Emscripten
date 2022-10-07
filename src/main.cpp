@@ -241,8 +241,13 @@ void launch_application() {
     // Create render pipeline
     uint8_t first_pass_fbo_id = renderer.get_new_fbo_id();
 
-    app_state.final_render_pass_id = renderer.add_render_pass(Render::SCREEN_TARGET,
-                                                              0);
+    app_state.final_render_pass_id = renderer.add_render_pass(Render::FBO_TARGET,
+                                                              first_pass_fbo_id);
+
+    renderer.add_quad_pass(Render::SCREEN_TARGET,
+                           0,
+                           RawShaders::basic_fragment,
+                           {});//sMaterialTexConstructor{ .color_tex = renderer.get_texture_of_fbo(first_pass_fbo_id), .enabled_color = true });
 
     sTransform vol_transf;
 

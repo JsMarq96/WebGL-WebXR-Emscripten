@@ -1,4 +1,6 @@
 #include "render.h"
+#include "raw_meshes.h"
+#include <cstdint>
 
 #ifdef __EMSCRIPTEN__
 #include <GLES3/gl3.h>
@@ -67,9 +69,15 @@ void Render::sInstance::init() {
     glEnable(GL_CULL_FACE);
     glCullFace(current_state.culling_mode);
     glFrontFace(current_state.front_face);
+
+    // Init quad mesh
+    quad_mesh_id = meshes_count++;
+    meshes[quad_mesh_id].init_with_triangles(RawMesh::quad_geometry,
+                                             sizeof(RawMesh::quad_geometry),
+                                             RawMesh::quad_indices,
+                                             sizeof(RawMesh::quad_indices));
 }
 
-#include <iostream>
 void Render::sInstance::change_graphic_state(const sGLState &new_state) {
     // Depth
     if (current_state.depth_test_enabled != new_state.depth_test_enabled) {
@@ -176,19 +184,6 @@ void Render::sInstance::render_frame(const glm::mat4x4 &view_proj_mat,
             sShader &shader = material_man.shaders[material.shader_id];
             sMeshBuffers &mesh = meshes[draw_call.mesh_id];
 
-            // Bind fbo attachments
-            if (pass.use_color_attachment0) {
-                material_man.add_color_attachment_from_fbo(draw_call.material_id,
-                                                           fbos[render_passes[pass.color_attachment_pass0_id].fbo_id],
-                                                           0);
-            }
-            if (pass.use_color_attachment0) {
-                material_man.add_color_attachment_from_fbo(draw_call.material_id,
-                                                           fbos[render_passes[pass.color_attachment_pass1_id].fbo_id],
-                                                           1);
-            }
-
-
             model = draw_call.transform.get_model();
             model_invert = glm::inverse(model);
 
@@ -198,10 +193,12 @@ void Render::sInstance::render_frame(const glm::mat4x4 &view_proj_mat,
 
             glBindVertexArray(mesh.VAO);
 
-            shader.set_uniform_matrix4("u_model_mat", model);
-            shader.set_uniform_matrix4("u_vp_mat", view_proj_mat);
-            //shader.set_uniform_vector("u_camera_eye_local", cam_pos);
-            shader.set_uniform_vector("u_camera_eye_local", glm::vec3(model_invert * glm::vec4(cam_pos, 1.0f)));
+            if (draw_call.use_transform) {
+                shader.set_uniform_matrix4("u_model_mat", model);
+                shader.set_uniform_matrix4("u_vp_mat", view_proj_mat);
+                //shader.set_uniform_vector("u_camera_eye_local", cam_pos);
+                shader.set_uniform_vector("u_camera_eye_local", glm::vec3(model_invert * glm::vec4(cam_pos, 1.0f)));
+            }
 
             if (mesh.is_indexed) {
                 glDrawElements(mesh.primitive, mesh.primitive_count, GL_UNSIGNED_SHORT, 0);
@@ -212,4 +209,49 @@ void Render::sInstance::render_frame(const glm::mat4x4 &view_proj_mat,
             material_man.disable();
         }
     }
+}
+
+
+
+// FBO methods ===================
+uint8_t Render::sInstance::FBO_init_with_single_color(const uint8_t fbo_id,
+                                                      const uint32_t width_i,
+                                                      const uint32_t height_i) {
+
+}
+
+uint8_t Render::sInstance::FBO_init_with_dual_color(const uint8_t fbo_id,
+                                                    const uint32_t width_i,
+                                                    const uint32_t height_i) {
+
+}
+
+uint8_t Render::sInstance::FBO_clean(const uint8_t fbo_id) {
+
+}
+
+uint8_t Render::sInstance::FBO_reinit(const uint8_t fbo_id,
+                                      const uint32_t width_i,
+                                      const uint32_t height_i) {
+    FBO_clean(fbo_id);
+
+    switch (fbos[fbo_id].attachment_use) {
+        case JUST_COLOR:
+            FBO_init_with_single_color(fbo_id,
+                                       width_i,
+                                       height_i);
+            break;
+        case JUST_DUAL_COLOR:
+            FBO_init_with_dual_color(fbo_id,
+                                     width_i,
+                                     height_i);
+            break;
+        case JUST_DEPTH:
+            // TODO
+            break;
+        case COLOR_AND_DEPTH:
+            // TODO
+            break;
+    }
+
 }

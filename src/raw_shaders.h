@@ -27,6 +27,19 @@ void main() {
 }
 )";
 
+const char quad_vertex[] = R"(#version 300 es
+in  vec3 a_pos;
+in  vec2 a_uv;
+in  vec3 a_normal;
+
+out vec2 v_uv;
+
+void main() {
+    v_uv = a_uv;
+    gl_Position = vec4(a_pos.xy, 0.0, 1.0);
+}
+)";
+
 
 const char volumetric_fragment[] = R"(#version 300 es
 precision highp float;
@@ -143,7 +156,6 @@ in vec2 v_screen_position;
 out vec4 o_frag_color;
 uniform vec3 u_camera_eye_local;
 uniform highp sampler3D u_volume_map;
-uniform highp sampler2D u_frame_color_attachment;
 uniform highp float u_density_threshold;
 const int MAX_ITERATIONS = 100;
 const float STEP_SIZE = 0.02;
