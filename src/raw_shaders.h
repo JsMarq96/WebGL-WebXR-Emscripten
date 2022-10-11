@@ -147,6 +147,18 @@ uniform highp sampler2D u_frame_color_attachment;
 uniform highp float u_density_threshold;
 const int MAX_ITERATIONS = 100;
 const float STEP_SIZE = 0.02;
+
+const float GRAD_DELTA = STEP_SIZE / 2.0;
+const float GRAD_DELTA_SQUARED = GRAD_DELTA * GRAD_DELTA;
+
+vec3 isosurface_normal(vec3 sample_pos) {
+   float x = texture(u_volume_map, sample_pos + vec3(GRAD_DELTA, 0.0, 0.0)).r - texture(u_volume_map, sample_pos - vec3(GRAD_DELTA, 0.0, 0.0)).r;
+   float y = texture(u_volume_map, sample_pos + vec3(0.0, GRAD_DELTA, 0.0)).r - texture(u_volume_map, sample_pos - vec3(0.0, GRAD_DELTA, 0.0)).r;
+   float z = texture(u_volume_map, sample_pos + vec3(0.0, 0.0, GRAD_DELTA)).r - texture(u_volume_map, sample_pos - vec3(0.0, 0.0, GRAD_DELTA)).r;
+
+   return normalize(vec3(x,y,z));
+}
+
 vec4 render_volume() {
    vec3 ray_dir = normalize(u_camera_eye_local - v_local_position);
    vec3 it_pos = vec3(0.0);
@@ -154,9 +166,6 @@ vec4 render_volume() {
    float ray_step = 1.0 / float(MAX_ITERATIONS);
    // TODO: optimize iterations size, and step size
    for(int i = 0; i < MAX_ITERATIONS; i++) {
-      if (final_color.a >= 0.95) {
-         break;
-      }
       vec3 sample_pos = ((v_local_position - it_pos));
       // Aboid clipping outside
       if (sample_pos.x < 0.0 || sample_pos.y < 0.0 || sample_pos.z < 0.0) {
@@ -167,7 +176,7 @@ vec4 render_volume() {
       }
       float depth = texture(u_volume_map, sample_pos).r;
       if (u_density_threshold <= depth) {
-         return vec4(1.0);
+         return vec4(isosurface_normal(sample_pos), 1.0);
       }
 
       it_pos = it_pos + (STEP_SIZE * ray_dir);
