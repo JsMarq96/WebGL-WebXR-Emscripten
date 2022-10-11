@@ -109,6 +109,10 @@ struct sMaterialManager {
         //textures[COLOR_ATTACHMENT] = fbo.color_attachment;
     }
 
+    inline uint8_t get_new_texture() {
+        return texture_count++;
+    }
+
     inline uint8_t add_material(const uint8_t shader_id,
                                 const sMaterialTexConstructor &mat_construct) {
         memcpy(materials[materials_count].texture_ids, mat_construct.texture_ids, sizeof(sMaterialInstance::texture_ids));

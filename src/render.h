@@ -242,13 +242,13 @@ namespace Render {
         }
 
         // FBO Functions =====
-        uint8_t FBO_init_with_single_color(const uint8_t fbo_id,
-                                           const uint32_t width_i,
-                                           const uint32_t height_i);
-        uint8_t FBO_init_with_dual_color(const uint8_t fbo_id,
-                                         const uint32_t width_i,
-                                         const uint32_t height_i);
-        uint8_t FBO_clean(const uint8_t fbo_id);
+        void FBO_init_with_single_color(const uint8_t fbo_id,
+                                        const uint32_t width_i,
+                                        const uint32_t height_i);
+        void FBO_init_with_dual_color(const uint8_t fbo_id,
+                                      const uint32_t width_i,
+                                      const uint32_t height_i);
+        void FBO_clean(const uint8_t fbo_id);
 
         uint8_t FBO_reinit(const uint8_t fbo_id,
                            const uint32_t width_i,

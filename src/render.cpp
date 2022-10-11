@@ -1,5 +1,6 @@
 #include "render.h"
 #include "raw_meshes.h"
+#include "texture.h"
 #include <cstdint>
 
 #ifdef __EMSCRIPTEN__
@@ -214,20 +215,78 @@ void Render::sInstance::render_frame(const glm::mat4x4 &view_proj_mat,
 
 
 // FBO methods ===================
-uint8_t Render::sInstance::FBO_init_with_single_color(const uint8_t fbo_id,
-                                                      const uint32_t width_i,
-                                                      const uint32_t height_i) {
+void Render::sInstance::FBO_init_with_single_color(const uint8_t fbo_id,
+                                                   const uint32_t width_i,
+                                                   const uint32_t height_i) {
+    sFBO *fbo = &fbos[fbo_id];
+    fbo->attachment_use = JUST_COLOR;
+
+    fbo->width = width_i;
+    fbo->height = height_i;
+
+    glGenFramebuffers(1, &fbo->id);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo->id);
+
+    fbo->color_attachment0 = material_man.get_new_texture();
+    sTexture *color_attachment0 = &material_man.textures[fbo->color_attachment0];
+
+    color_attachment0->create_empty2D_with_size(fbo->width,
+                                                fbo->height);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER,
+                           GL_COLOR_ATTACHMENT0,
+                           GL_TEXTURE_2D,
+                           color_attachment0->texture_id,
+                           0);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 }
 
-uint8_t Render::sInstance::FBO_init_with_dual_color(const uint8_t fbo_id,
-                                                    const uint32_t width_i,
-                                                    const uint32_t height_i) {
+void Render::sInstance::FBO_init_with_dual_color(const uint8_t fbo_id,
+                                                 const uint32_t width_i,
+                                                 const uint32_t height_i) {
+    sFBO *fbo = &fbos[fbo_id];
+    fbo->attachment_use = JUST_COLOR;
 
+    fbo->width = width_i;
+    fbo->height = height_i;
+
+    glGenFramebuffers(1, &fbo->id);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo->id);
+
+    fbo->color_attachment0 = material_man.get_new_texture();
+    fbo->color_attachment1 = material_man.get_new_texture();
+    sTexture *color_attachment0 = &material_man.textures[fbo->color_attachment0];
+    sTexture *color_attachment1 = &material_man.textures[fbo->color_attachment1];
+
+    color_attachment0->create_empty2D_with_size(fbo->width,
+                                                fbo->height);
+
+   color_attachment1->create_empty2D_with_size(fbo->width,
+                                                fbo->height);
+
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER,
+                           GL_COLOR_ATTACHMENT0,
+                           GL_TEXTURE_2D,
+                           color_attachment0->texture_id,
+                           0);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER,
+                           GL_COLOR_ATTACHMENT1,
+                           GL_TEXTURE_2D,
+                           color_attachment1->texture_id,
+                           0);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-uint8_t Render::sInstance::FBO_clean(const uint8_t fbo_id) {
-
+void Render::sInstance::FBO_clean(const uint8_t fbo_id) {
+    sFBO &fbo = fbos[fbo_id];
+    glDeleteTextures(1, &(material_man.textures[fbo.color_attachment0].texture_id));
+    glDeleteTextures(1, &(material_man.textures[fbo.color_attachment1].texture_id));
+    glDeleteFramebuffers(1, &fbo.id);
 }
 
 uint8_t Render::sInstance::FBO_reinit(const uint8_t fbo_id,
