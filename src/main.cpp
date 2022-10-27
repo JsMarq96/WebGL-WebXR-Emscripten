@@ -45,6 +45,7 @@ Application::sInstance app_state;
 uint8_t first_render_pass = 0;
 
 #ifdef __EMSCRIPTEN__
+double prev_time = 0.0;
 void render_stereoscopic_frame(void *user_data,
                                int framebuffer_id,
                                int time,
@@ -53,7 +54,12 @@ void render_stereoscopic_frame(void *user_data,
                                int view_count) {
     // Update
     app_state.get_current_state();
+    double curr_time = emscripten_get_now() * 0.001;
 
+    double FPS = -1.0 / (prev_time - curr_time);
+    prev_time = curr_time;
+
+    std::cout << "FPS: " << FPS << std::endl;
 
     // Controller UI
     for(uint8_t controller_index = 0; controller_index < 2; controller_index++) {
@@ -248,7 +254,7 @@ void launch_application() {
     sTransform vol_transf;
 
     vol_transf.position = glm::vec3(0.0f, 1.0f, -0.60f);
-    vol_transf.scale = {0.25f, 0.25f, 0.25f};
+    vol_transf.scale = {0.5f, 0.5f, 0.5f};
 
     // First pass, for the volumes
     app_state.volumetric_drawcall_id = renderer.add_drawcall_to_pass(app_state.final_render_pass_id,
